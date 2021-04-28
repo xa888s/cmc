@@ -4,6 +4,8 @@ use scraper::{Html, Selector};
 
 const SEARCH_URL: &str = "https://crackmes.one/search";
 
+// Holds the contents of a search result
+#[derive(Debug, Default)]
 pub struct CrackMe {
     name: String,
     author: String,
@@ -14,8 +16,12 @@ pub struct CrackMe {
     comments: u64,
 }
 
-pub async fn get_search_results<'a>(token: &'a str) -> Result<Vec<CrackMe>> {}
+// returns all the search results
+pub async fn get_search_results<'a>(client: &mut Client, token: &'a str) -> Result<Vec<CrackMe>> {
+    todo!()
+}
 
+// returns the token to allow searching
 pub async fn get_token(client: &mut Client) -> Result<String> {
     let html = {
         let body = client.get(SEARCH_URL).send().await?.text().await?;
