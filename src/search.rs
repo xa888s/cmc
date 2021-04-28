@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{format_err, Result};
 use reqwest::Client;
 use scraper::{Html, Selector};
 
@@ -36,10 +36,13 @@ pub async fn get_token(client: &mut Client) -> Result<String> {
             Some(s) => s == "token",
             _ => false,
         })
-        .ok_or("Couldn't parse token")
-        .unwrap();
+        .ok_or_else(|| format_err!("Couldn't parse token"))?;
 
-    let token = element.value().attr("value").unwrap().to_owned();
+    let token = element
+        .value()
+        .attr("value")
+        .ok_or_else(|| format_err!("Token doesn't have a value attribute"))?
+        .to_owned();
 
     Ok(token)
 }
