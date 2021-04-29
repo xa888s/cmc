@@ -1,7 +1,7 @@
 use crate::crackme::CrackMe;
-use anyhow::{format_err, Result};
+use anyhow::{anyhow, Result};
 use reqwest::Client;
-use scraper::{Html, Selector};
+use scraper::Html;
 use std::path::Path;
 use zip::read::ZipArchive;
 
@@ -30,7 +30,7 @@ fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
 
         let filepath = file
             .enclosed_name()
-            .ok_or_else(|| format_err!("Invalid file path"))?;
+            .ok_or_else(|| anyhow!("Invalid file path"))?;
 
         let outpath = Path::new(id).join(filepath);
 
@@ -65,8 +65,6 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
 
     let crackme = CrackMe::with_full_html(&html)?;
 
-    println!("{}", crackme);
-
     // getting the zip file
     let bytes = client
         .get(MAIN_URL.to_string() + crackme.download_href())
@@ -79,6 +77,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
     // writing the files contained inside it to disk (in a new folder in the current directory with
     // its name being the id)
     write_zip_to_disk(bytes, id)?;
+    println!("{}", crackme);
 
     Ok(())
 }

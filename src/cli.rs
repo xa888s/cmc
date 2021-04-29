@@ -12,7 +12,16 @@ pub struct App {
 #[argh(subcommand)]
 pub enum Commands {
     Get(SubGet),
+    Search(SubSearch),
 }
+
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(
+    description = "used to search for crackmes",
+    subcommand,
+    name = "search"
+)]
+pub struct SubSearch {}
 
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(description = "used to get crackmes", subcommand, name = "get")]

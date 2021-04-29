@@ -1,26 +1,77 @@
-use anyhow::{format_err, Result};
+use crate::next_parse;
+use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
 use std::fmt::{self, Display, Formatter};
+use strum::{Display, EnumString};
+
+// we allow this so the mapping is more one to one
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, PartialEq, EnumString, Display)]
+pub enum Platform {
+    DOS,
+    #[strum(serialize = "Mac OS X")]
+    MacOSX,
+    Multiplatform,
+    #[strum(serialize = "Unix/linux etc.")]
+    UnixLinux,
+    Windows,
+    #[strum(serialize = "Windows 2000/XP only")]
+    Windows2000XP,
+    #[strum(serialize = "Windows 7 Only")]
+    Windows7,
+    #[strum(serialize = "Windows Vista Only")]
+    WindowsVista,
+    #[strum(serialize = "Unspecified/other")]
+    Other,
+}
+
+#[derive(Debug, PartialEq, EnumString, Display)]
+pub enum Language {
+    #[strum(serialize = "C/C++")]
+    COrCPlusPlus,
+    Assembler,
+    Java,
+    #[strum(serialize = "(Visual) Basic")]
+    VisualBasic,
+    #[strum(serialize = "Borland Delphi")]
+    BorlandDelphi,
+    #[strum(serialize = "Turbo Pascal")]
+    TurboPascal,
+    #[strum(serialize = ".NET")]
+    DotNet,
+    #[strum(serialize = "Unspecified/other")]
+    Other,
+}
 
 // Holds the contents of a crackme
-#[derive(Debug, PartialEq, Default)]
-pub struct CrackMe {
-    name: String,
-    author: String,
-    language: String,
-    upload: String,
-    download_href: String,
-    platform: String,
+#[derive(Debug, PartialEq)]
+pub struct CrackMe<'a> {
+    html: &'a Html,
+    name: &'a str,
+    author: &'a str,
+    language: Language,
+    upload: &'a str,
+    download_href: &'a str,
+    platform: Platform,
     stats: Stats,
 }
 
 #[derive(Debug, PartialEq, Default)]
-struct Stats {
-    quality: f32,
-    difficulty: f32,
+pub struct Stats {
+    pub quality: f32,
+    pub difficulty: f32,
 }
 
-impl Display for CrackMe {
+impl Stats {
+    pub fn new(quality: f32, difficulty: f32) -> Stats {
+        Stats {
+            quality,
+            difficulty,
+        }
+    }
+}
+
+impl Display for CrackMe<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "Name: {}", self.name)?;
         writeln!(f, "Author: {}", self.author)?;
@@ -32,16 +83,12 @@ impl Display for CrackMe {
             self.download_href
         )?;
         writeln!(f, "Platform: {}", self.platform)?;
-        writeln!(f, "Quality: {}", self.stats.quality)?;
-        write!(f, "Difficulty: {}", self.stats.difficulty)
+        writeln!(f, "Quality: {:.1}", self.stats.quality)?;
+        write!(f, "Difficulty: {:.1}", self.stats.difficulty)
     }
 }
 
-impl CrackMe {
-    pub fn with_full_html(html: &Html) -> Result<CrackMe> {
-        CrackMe::parse_stats(&html)
-    }
-
+impl CrackMe<'_> {
     /// ## Order of items:
     /// author
     /// language
@@ -67,9 +114,10 @@ impl CrackMe {
     /// "Rate!"
     ///
     // TODO: Clean up this whole function
-    fn parse_stats(html: &Html) -> Result<CrackMe> {
+    pub fn with_full_html(html: &Html) -> Result<CrackMe<'_>> {
         let selector = Selector::parse("div").unwrap();
 
+        // doing all our passes
         let mut info = html
             .select(&selector)
             .filter(|e| e.value().classes().any(|s| s == "col-3"))
@@ -78,74 +126,74 @@ impl CrackMe {
             .map(|t| t.trim());
 
         // FIXME: Store the html and only hold &str instead of making a ton of new allocations
-        let author = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No author!"))?
-            .to_string();
+        let author = info.nth(1).ok_or_else(|| anyhow!("No author!"))?;
 
-        let language = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No language!"))?
-            .to_string();
+        next_parse! {
+            info,
+            language: Language
+        }
 
-        let upload = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No upload date!"))?
-            .to_string();
+        let upload = info.nth(1).ok_or_else(|| anyhow!("No upload date!"))?;
 
-        let platform = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No platform!"))?
-            .to_string();
-
-        let difficulty: f32 = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No difficulty!"))?
-            .parse()?;
-
-        let quality: f32 = info
-            .nth(1)
-            .ok_or_else(|| format_err!("No quality!"))?
-            .parse()?;
+        next_parse! {
+            info,
+            platform: Platform,
+            difficulty: f32,
+            quality: f32
+        }
 
         // make sure there (probably) hasn't been a change in the format
         assert!(info.next().is_none());
 
-        let selector = Selector::parse("h3").unwrap();
+        let name = CrackMe::parse_name(&html)?;
+        let download_href = CrackMe::parse_download_link(&html)?;
 
-        let name = {
-            let text = html
-                .select(&selector)
-                .next()
-                .ok_or_else(|| format_err!("No h3 element for name!"))?
-                .inner_html();
-
-            // FIXME: use actual parsing
-            text.split("'s ")
-                .nth(1)
-                .ok_or_else(|| format_err!("No name!"))?
-                .to_string()
+        let stats = Stats {
+            difficulty,
+            quality,
         };
 
-        Ok(CrackMe {
+        // put together our crackme and return it
+        let crackme = CrackMe {
+            html,
             name,
             upload,
             author,
             language,
-            download_href: CrackMe::parse_download_link(&html)?,
+            download_href,
             platform,
-            stats: Stats {
-                difficulty,
-                quality,
-            },
-        })
+            stats,
+        };
+
+        Ok(crackme)
     }
 
     pub fn download_href(&self) -> &str {
         &self.download_href
     }
 
-    fn parse_download_link(html: &Html) -> Result<String> {
+    fn parse_name(html: &Html) -> Result<&str> {
+        // the name is the only h3 element
+        let selector = Selector::parse("h3").unwrap();
+
+        let name = {
+            let text = html
+                .select(&selector)
+                .next()
+                .ok_or_else(|| anyhow!("No h3 element for name!"))?
+                .text()
+                .nth(1)
+                .and_then(|t| t.split("'s ").nth(1))
+                .ok_or_else(|| anyhow!("No h3 element for name!"))?;
+
+            // FIXME: use actual parsing
+            text
+        };
+
+        Ok(name)
+    }
+
+    fn parse_download_link(html: &Html) -> Result<&str> {
         // guaranteed to parse
         let selector = Selector::parse("a").unwrap();
 
@@ -153,13 +201,14 @@ impl CrackMe {
         let element = html
             .select(&selector)
             .find(|e| e.value().classes().any(|c| c == "btn-download"))
-            .ok_or_else(|| format_err!("No element with btn-download"))?;
+            .ok_or_else(|| anyhow!("No element with btn-download"))?;
 
-        Ok(element
+        let download_href = element
             .value()
             .attr("href")
-            .ok_or_else(|| format_err!("No href value"))?
-            .to_string())
+            .ok_or_else(|| anyhow!("No href value"))?;
+
+        Ok(download_href)
     }
 }
 
@@ -176,12 +225,13 @@ mod tests {
         assert_eq!(
             crackme,
             CrackMe {
-                name: "SAFE_01".to_string(),
-                author: "oles".to_string(),
-                upload: "12:44 PM 04/22/2021".to_string(),
-                platform: "Windows".to_string(),
-                language: "(Visual) Basic".to_string(),
-                download_href: "/static/crackme/60816fca33c5d42f38520831.zip".to_string(),
+                html: &html,
+                name: "SAFE_01",
+                author: "oles",
+                upload: "12:44 PM 04/22/2021",
+                platform: Platform::Windows,
+                language: Language::VisualBasic,
+                download_href: "/static/crackme/60816fca33c5d42f38520831.zip",
                 stats: Stats {
                     quality: 4.5,
                     difficulty: 1.0,
