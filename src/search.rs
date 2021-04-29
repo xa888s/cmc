@@ -132,7 +132,10 @@ impl<'a> SearchCrackMes<'a> {
 }
 
 // returns all the search results
-pub async fn handle_search_results<'a>(client: &mut Client) -> Result<()> {
+pub async fn handle_search_results<'a>(
+    client: &mut Client,
+    args: crate::cli::SearchArgs,
+) -> Result<()> {
     let html = {
         let body = client.get(SEARCH_URL).send().await?.text().await?;
         Html::parse_document(&body)
@@ -140,15 +143,23 @@ pub async fn handle_search_results<'a>(client: &mut Client) -> Result<()> {
 
     let token = get_token(&html)?;
 
-    let params = [
-        ("name", ""),
-        ("author", ""),
-        ("difficulty-min", "1"),
-        ("difficulty-max", "6"),
-        ("quality-min", "1"),
-        ("quality-max", "6"),
-        ("token", token),
+    let mut params: Vec<(&str, String)> = vec![
+        ("name", args.name),
+        ("author", args.author),
+        ("difficulty-min", args.difficulty.0.to_string()),
+        ("difficulty-max", args.difficulty.1.to_string()),
+        ("quality-min", args.quality.0.to_string()),
+        ("quality-max", args.quality.1.to_string()),
+        ("token", token.to_string()),
     ];
+
+    if let Some(l) = args.language {
+        params.push(("lang", l.to_string()));
+    }
+
+    if let Some(p) = args.platform {
+        params.push(("platform", p.to_string()));
+    }
 
     let search = client
         .post(SEARCH_URL)

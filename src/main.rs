@@ -18,8 +18,8 @@ async fn main() -> Result<()> {
         Commands::Get(SubGet { id }) => {
             get::handle_crackme(&mut client, &id).await?;
         }
-        Commands::Search(_) => {
-            search::handle_search_results(&mut client).await?;
+        Commands::Search(args) => {
+            search::handle_search_results(&mut client, args).await?;
         }
     }
     Ok(())
