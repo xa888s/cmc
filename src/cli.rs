@@ -28,7 +28,7 @@ pub struct SubGet {
 fn id_parser(v: &str) -> Result<String, String> {
     let v = v.to_string();
     if v.len() != 24 {
-        Err(v)
+        Err("Invalid ID length".to_string())
     } else {
         Ok(v)
     }

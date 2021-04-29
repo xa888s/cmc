@@ -1,23 +1,12 @@
+use crate::crackme::CrackMe;
 use anyhow::{format_err, Result};
 use reqwest::Client;
 use scraper::{Html, Selector};
 
 const SEARCH_URL: &str = "https://crackmes.one/search";
 
-// Holds the contents of a search result
-#[derive(Debug, Default)]
-pub struct CrackMe {
-    name: String,
-    author: String,
-    rating: f32,
-    difficulty: f32,
-    platform: &'static str,
-    solutions: u64,
-    comments: u64,
-}
-
 // returns all the search results
-pub async fn get_search_results<'a>(client: &mut Client, token: &'a str) -> Result<Vec<CrackMe>> {
+pub async fn get_search_results(client: &mut Client, token: &str) -> Result<Vec<CrackMe>> {
     todo!()
 }
 

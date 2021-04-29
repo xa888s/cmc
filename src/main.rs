@@ -2,6 +2,7 @@ use anyhow::Result;
 use reqwest::Client;
 
 mod cli;
+mod crackme;
 mod get;
 mod search;
 
@@ -13,7 +14,7 @@ async fn main() -> Result<()> {
     match args.nested {
         Commands::Get(SubGet { id }) => {
             let mut client = Client::builder().cookie_store(true).build()?;
-            get::get_crackme(&mut client, &id).await?;
+            get::handle_crackme(&mut client, &id).await?;
         }
         _ => unreachable!("Command not implemented yet!"),
     }
