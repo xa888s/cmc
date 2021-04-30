@@ -11,8 +11,9 @@ pub enum Platform {
     DOS,
     #[strum(serialize = "Mac OS X", serialize = "macos")]
     MacOSX,
+    #[strum(serialize = "Multiplatform", serialize = "multiplatform")]
     Multiplatform,
-    #[strum(serialize = "Unix/linux etc.", serialize = "linux")]
+    #[strum(serialize = "Unix/linux etc.", serialize = "linux", serialize = "unix")]
     UnixLinux,
     #[strum(serialize = "Windows", serialize = "windows")]
     Windows,
