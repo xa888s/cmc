@@ -129,10 +129,6 @@ impl<'a> SearchCrackMes<'a> {
 
         Ok(crackmes)
     }
-
-    pub fn first(&self) -> Option<&SearchCrackMe> {
-        self.crackmes.first()
-    }
 }
 
 // returns all the search results
@@ -209,10 +205,11 @@ mod test {
     #[test]
     fn parse_search_text() {
         let html = Html::parse_document(TEST_FILE);
-        let crackme = SearchCrackMes::with_search_html(&html).unwrap();
+        let crackmes = SearchCrackMes::with_search_html(&html).unwrap();
+        let SearchCrackMes { html: _, crackmes } = crackmes;
 
         assert_eq!(
-            crackme.first(),
+            crackmes.first(),
             Some(&SearchCrackMe {
                 name: "SAFE_01",
                 author: "oles",

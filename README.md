@@ -15,5 +15,5 @@ cmg get 60816eb933c5d42f3852082e
 ```
 This would search for all Linux/Unix crackmes.
 ```
-cmg search --platform "Unix/linux etc."
+cmg search --platform linux
 ```
