@@ -13,3 +13,7 @@ This would download and extract the files for [this](https://crackmes.one/crackm
 ```
 cmg get 60816eb933c5d42f3852082e
 ```
+This would search for all Linux/Unix crackmes.
+```
+cmg search --platform "Unix/linux etc."
+```
