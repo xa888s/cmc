@@ -1,5 +1,6 @@
 use anyhow::Result;
 use reqwest::Client;
+use structopt::StructOpt;
 
 mod cli;
 mod crackme;
@@ -11,14 +12,14 @@ use cli::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args: App = argh::from_env();
+    let args: App = App::from_args();
     let mut client = Client::builder().cookie_store(true).build()?;
 
     match args.nested {
-        Commands::Get(SubGet { id }) => {
+        Command::Get { id } => {
             get::handle_crackme(&mut client, &id).await?;
         }
-        Commands::Search(args) => {
+        Command::Search(args) => {
             search::handle_search_results(&mut client, args).await?;
         }
     }
