@@ -17,7 +17,7 @@ pub enum Command {
     },
     #[structopt(
         name = "search",
-        about = "Used to search for crackmes based on some criteria"
+        about = "Used to search for crackmes based on some criteria (or default search if no criteria chosen)"
     )]
     Search(SearchArgs),
 }
@@ -42,11 +42,11 @@ pub struct SearchArgs {
     )]
     pub quality: (u8, u8),
 
-    #[structopt(help = "Name of crackme", short, long, default_value = "")]
-    pub name: String,
+    #[structopt(help = "Name of crackme", short, long)]
+    pub name: Option<String>,
 
-    #[structopt(help = "Name of crackme's author", short, long, default_value = "")]
-    pub author: String,
+    #[structopt(help = "Name of crackme's author", short, long)]
+    pub author: Option<String>,
 
     #[structopt(help = "Language of crackme", short, long)]
     pub language: Option<Language>,

@@ -144,8 +144,8 @@ pub async fn handle_search_results<'a>(
     let token = get_token(&html)?;
 
     let mut params: Vec<(&str, String)> = vec![
-        ("name", args.name),
-        ("author", args.author),
+        ("name", args.name.unwrap_or_default()),
+        ("author", args.author.unwrap_or_default()),
         ("difficulty-min", args.difficulty.0.to_string()),
         ("difficulty-max", args.difficulty.1.to_string()),
         ("quality-min", args.quality.0.to_string()),
