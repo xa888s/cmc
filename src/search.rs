@@ -11,7 +11,7 @@ use scraper::{Html, Selector};
 const SEARCH_URL: &str = "https://crackmes.one/search";
 
 #[derive(Debug, PartialEq)]
-struct SearchCrackMe<'a> {
+pub struct SearchCrackMe<'a> {
     name: &'a str,
     author: &'a str,
     language: Language,
@@ -129,6 +129,10 @@ impl<'a> SearchCrackMes<'a> {
 
         Ok(crackmes)
     }
+
+    pub fn first(&self) -> Option<&SearchCrackMe> {
+        self.crackmes.first()
+    }
 }
 
 // returns all the search results
@@ -207,23 +211,21 @@ mod test {
         let html = Html::parse_document(TEST_FILE);
         let crackme = SearchCrackMes::with_search_html(&html).unwrap();
 
-        dbg!(crackme);
-
-        //assert_eq!(
-        //    crackme,
-        //    CrackMe {
-        //        html: &html,
-        //        name: "SAFE_01",
-        //        author: "oles",
-        //        upload: "12:44 PM 04/22/2021",
-        //        platform: Platform::Windows,
-        //        language: Language::VisualBasic,
-        //        download_href: "/static/crackme/60816fca33c5d42f38520831.zip",
-        //        stats: Stats {
-        //            quality: 4.5,
-        //            difficulty: 1.0,
-        //        }
-        //    }
-        //);
+        assert_eq!(
+            crackme.first(),
+            Some(&SearchCrackMe {
+                name: "SAFE_01",
+                author: "oles",
+                language: Language::VisualBasic,
+                platform: Platform::Windows,
+                date: "12:44 PM 04/22/2021",
+                solutions: 0,
+                comments: 0,
+                stats: Stats {
+                    quality: 4.5,
+                    difficulty: 1.0
+                }
+            })
+        );
     }
 }

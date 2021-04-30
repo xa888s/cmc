@@ -9,11 +9,12 @@ use strum::{Display, EnumString};
 #[derive(Debug, PartialEq, EnumString, Display)]
 pub enum Platform {
     DOS,
-    #[strum(serialize = "Mac OS X")]
+    #[strum(serialize = "Mac OS X", serialize = "macos")]
     MacOSX,
     Multiplatform,
-    #[strum(serialize = "Unix/linux etc.")]
+    #[strum(serialize = "Unix/linux etc.", serialize = "linux")]
     UnixLinux,
+    #[strum(serialize = "Windows", serialize = "windows")]
     Windows,
     #[strum(serialize = "Windows 2000/XP only")]
     Windows2000XP,
@@ -21,7 +22,7 @@ pub enum Platform {
     Windows7,
     #[strum(serialize = "Windows Vista Only")]
     WindowsVista,
-    #[strum(serialize = "Unspecified/other")]
+    #[strum(serialize = "Unspecified/other", serialize = "other")]
     Other,
 }
 
