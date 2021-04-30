@@ -2,7 +2,7 @@ use crate::crackme::{Language, Platform};
 use structopt::StructOpt;
 
 #[derive(StructOpt, PartialEq, Debug)]
-#[structopt(name = "cmg", about = "simple crackmes.one client")]
+#[structopt(name = "cmg", about = "Simple crackmes.one client")]
 pub struct App {
     #[structopt(subcommand)]
     pub nested: Command,
@@ -10,21 +10,22 @@ pub struct App {
 
 #[derive(StructOpt, PartialEq, Debug)]
 pub enum Command {
+    #[structopt(name = "get", about = "Used to get crackmes and extract them")]
     Get {
-        #[structopt(name = "get", help = "the ID of the crackme", parse(try_from_str = id_parser))]
+        #[structopt(help = "The ID of the crackme", parse(try_from_str = id_parser))]
         id: String,
     },
+    #[structopt(
+        name = "search",
+        about = "Used to search for crackmes based on some criteria"
+    )]
     Search(SearchArgs),
 }
 
 #[derive(StructOpt, PartialEq, Debug)]
-#[structopt(
-    help = "used to search for crackmes (WARNING: Only gets first page of results)",
-    name = "search"
-)]
 pub struct SearchArgs {
     #[structopt(
-        help = "the range of difficulty (i.e. 1..6)",
+        help = "The range of difficulty (i.e. 1..6)",
         parse(try_from_str = range_parser),
         short,
         long,
@@ -33,7 +34,7 @@ pub struct SearchArgs {
     pub difficulty: (u8, u8),
 
     #[structopt(
-        help = "the range of quality (i.e. 1..6)",
+        help = "The range of quality (i.e. 1..6)",
         parse(try_from_str = range_parser),
         short,
         long,
@@ -41,24 +42,23 @@ pub struct SearchArgs {
     )]
     pub quality: (u8, u8),
 
-    #[structopt(help = "name of crackme", short, long, default_value = "")]
+    #[structopt(help = "Name of crackme", short, long, default_value = "")]
     pub name: String,
 
-    #[structopt(help = "name of crackme's author", short, long, default_value = "")]
+    #[structopt(help = "Name of crackme's author", short, long, default_value = "")]
     pub author: String,
 
-    #[structopt(help = "language of crackme", short, long)]
+    #[structopt(help = "Language of crackme", short, long)]
     pub language: Option<Language>,
 
-    #[structopt(help = "platform of crackme", short, long)]
+    #[structopt(help = "Platform of crackme", short, long)]
     pub platform: Option<Platform>,
 }
 
 #[derive(StructOpt, PartialEq, Debug)]
-#[structopt(help = "used to get crackmes", name = "get")]
 pub struct SubGet {
     #[structopt(
-        help = "the ID of the crackme",
+        help = "The ID of the crackme",
         parse(try_from_str = id_parser)
     )]
     pub id: String,
