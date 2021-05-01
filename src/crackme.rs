@@ -125,17 +125,19 @@ impl CrackMe<'_> {
             .filter(|e| e.value().classes().any(|s| s == "col-3"))
             .flat_map(|e| e.text())
             .filter(|t| !t.chars().all(char::is_whitespace))
-            .map(|t| t.trim());
+            .map(|t| t.trim())
+            .skip(1)
+            .step_by(2);
 
         // FIXME: Store the html and only hold &str instead of making a ton of new allocations
-        let author = info.nth(1).ok_or_else(|| anyhow!("No author!"))?;
+        let author = info.next().ok_or_else(|| anyhow!("No author!"))?;
 
         next_parse! {
             info,
             language: Language
         }
 
-        let upload = info.nth(1).ok_or_else(|| anyhow!("No upload date!"))?;
+        let upload = info.next().ok_or_else(|| anyhow!("No upload date!"))?;
 
         next_parse! {
             info,

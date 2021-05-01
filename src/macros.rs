@@ -21,7 +21,7 @@ macro_rules! next_parse_inner {
 macro_rules! next_parse {
     ($i:ident, $s:ident: $t:ty) => {
         let $s: $t = $i
-            .nth(1)
+            .next()
             .and_then(|l| l.parse().ok())
             .ok_or_else(|| anyhow!("No {}!", stringify!($s)))?;
     };
