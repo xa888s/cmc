@@ -29,19 +29,19 @@ pub enum Platform {
 
 #[derive(Debug, PartialEq, EnumString, Display)]
 pub enum Language {
-    #[strum(serialize = "C/C++")]
+    #[strum(serialize = "C/C++", serialize = "cpp")]
     COrCPlusPlus,
     Assembler,
     Java,
-    #[strum(serialize = "(Visual) Basic")]
+    #[strum(serialize = "(Visual) Basic", serialize = "vb")]
     VisualBasic,
     #[strum(serialize = "Borland Delphi")]
     BorlandDelphi,
     #[strum(serialize = "Turbo Pascal")]
     TurboPascal,
-    #[strum(serialize = ".NET")]
+    #[strum(serialize = ".NET", serialize = "dotnet")]
     DotNet,
-    #[strum(serialize = "Unspecified/other")]
+    #[strum(serialize = "Unspecified/other", serialize = "other")]
     Other,
 }
 
@@ -90,30 +90,6 @@ impl Display for CrackMe<'_> {
 }
 
 impl CrackMe<'_> {
-    /// ## Order of items:
-    /// author
-    /// language
-    /// upload
-    /// platform
-    /// difficulty
-    /// quality
-    ///
-    /// ## Iteration example:
-    /// "Author:"
-    /// "oles"
-    /// "Language:"
-    /// "(Visual) Basic"
-    /// "Upload:"
-    /// "12:44 PM 04/22/2021"
-    /// "Platform"
-    /// "Windows"
-    /// "Difficulty:"
-    /// "1.0"
-    /// "Rate!"
-    /// "Quality:"
-    /// "4.5"
-    /// "Rate!"
-    ///
     // TODO: Clean up this whole function
     pub fn with_full_html(html: &Html) -> Result<CrackMe<'_>> {
         let selector = Selector::parse("div").unwrap();
@@ -128,7 +104,14 @@ impl CrackMe<'_> {
             .skip(1)
             .step_by(2);
 
-        // FIXME: Store the html and only hold &str instead of making a ton of new allocations
+        // Order of items:
+        // author
+        // language
+        // upload
+        // platform
+        // difficulty
+        // quality
+
         let author = info.next().ok_or_else(|| anyhow!("No author!"))?;
 
         next_parse! {
@@ -179,12 +162,13 @@ impl CrackMe<'_> {
         let selector = Selector::parse("h3").unwrap();
 
         let name = {
+            // Input starts like "'s NAME_OF_CRACKME"
+            // So we could just take the characters from 3..
+            // but we check for "'s " to make sure our format is still correct (just a safeguard)
             let text = html
                 .select(&selector)
                 .next()
-                .ok_or_else(|| anyhow!("No h3 element for name!"))?
-                .text()
-                .nth(1)
+                .and_then(|t| t.text().nth(1))
                 .and_then(|t| t.split("'s ").nth(1))
                 .ok_or_else(|| anyhow!("No h3 element for name!"))?;
 
@@ -200,15 +184,11 @@ impl CrackMe<'_> {
         let selector = Selector::parse("a").unwrap();
 
         // finding the download link
-        let element = html
+        let download_href = html
             .select(&selector)
             .find(|e| e.value().classes().any(|c| c == "btn-download"))
-            .ok_or_else(|| anyhow!("No element with btn-download"))?;
-
-        let download_href = element
-            .value()
-            .attr("href")
-            .ok_or_else(|| anyhow!("No href value"))?;
+            .and_then(|a| a.value().attr("href"))
+            .ok_or_else(|| anyhow!("No href value!"))?;
 
         Ok(download_href)
     }
