@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::{
     crackme::{Language, Platform, Stats},
-    next_child, next_parse_inner,
+    next_parse,
 };
 use anyhow::{anyhow, Result};
 use reqwest::Client;
@@ -36,15 +36,19 @@ impl<'a> fmt::Display for SearchCrackMe<'a> {
 
 impl<'a> SearchCrackMe<'a> {
     pub fn with_element_iter(
-        mut info: impl Iterator<Item = scraper::ElementRef<'a>>,
+        info: impl Iterator<Item = scraper::ElementRef<'a>>,
     ) -> Result<SearchCrackMe<'a>> {
-        next_child! {
-            info,
-            name,
-            author
-        }
+        let mut info = info
+            .flat_map(|t| t.text())
+            .filter(|t| !t.chars().all(char::is_whitespace))
+            .map(|t| t.trim());
 
-        next_parse_inner! {
+        let (name, author) = (
+            info.next().ok_or_else(|| anyhow!("No {} found!", "name"))?,
+            info.next().ok_or_else(|| anyhow!("No {} found!", "name"))?,
+        );
+
+        next_parse! {
             info,
             language: Language,
             difficulty: f32,
@@ -52,16 +56,15 @@ impl<'a> SearchCrackMe<'a> {
             platform: Platform
         }
 
-        let date: &str = info
-            .next()
-            .and_then(|l| l.text().next().map(|s| s.trim()))
-            .ok_or_else(|| anyhow!("No date"))?;
+        let date: &str = info.next().ok_or_else(|| anyhow!("No date"))?;
 
-        next_parse_inner! {
+        next_parse! {
             info,
             solutions: u64,
             comments: u64
         }
+
+        assert!(info.next().is_none());
 
         let stats = Stats::new(quality, difficulty);
 
