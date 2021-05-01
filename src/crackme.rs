@@ -48,7 +48,6 @@ pub enum Language {
 // Holds the contents of a crackme
 #[derive(Debug, PartialEq)]
 pub struct CrackMe<'a> {
-    html: &'a Html,
     name: &'a str,
     author: &'a str,
     language: Language,
@@ -159,7 +158,6 @@ impl CrackMe<'_> {
 
         // put together our crackme and return it
         let crackme = CrackMe {
-            html,
             name,
             upload,
             author,
@@ -229,7 +227,6 @@ mod tests {
         assert_eq!(
             crackme,
             CrackMe {
-                html: &html,
                 name: "SAFE_01",
                 author: "oles",
                 upload: "12:44 PM 04/22/2021",

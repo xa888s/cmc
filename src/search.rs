@@ -44,8 +44,8 @@ impl<'a> SearchCrackMe<'a> {
             .map(|t| t.trim());
 
         let (name, author) = (
-            info.next().ok_or_else(|| anyhow!("No {} found!", "name"))?,
-            info.next().ok_or_else(|| anyhow!("No {} found!", "name"))?,
+            info.next().ok_or_else(|| anyhow!("No name found!"))?,
+            info.next().ok_or_else(|| anyhow!("No author found!"))?,
         );
 
         next_parse! {
@@ -86,7 +86,6 @@ impl<'a> SearchCrackMe<'a> {
 // We have a seperate struct so that we can store the Html with it, saving some allocations
 #[derive(Debug, PartialEq)]
 pub struct SearchCrackMes<'a> {
-    html: &'a Html,
     crackmes: Vec<SearchCrackMe<'a>>,
 }
 
@@ -127,7 +126,7 @@ impl<'a> SearchCrackMes<'a> {
                 },
             )?;
 
-            SearchCrackMes { html, crackmes }
+            SearchCrackMes { crackmes }
         };
 
         Ok(crackmes)
@@ -184,18 +183,14 @@ pub async fn handle_search_results<'a>(
 fn get_token(html: &Html) -> Result<&str> {
     let selector = Selector::parse("input").unwrap();
 
-    let element = html
+    let token = html
         .select(&selector)
         .find(|e| match e.value().id() {
             Some(s) => s == "token",
             _ => false,
         })
+        .and_then(|t| t.value().attr("value"))
         .ok_or_else(|| anyhow!("Couldn't parse token"))?;
-
-    let token = element
-        .value()
-        .attr("value")
-        .ok_or_else(|| anyhow!("Token doesn't have a value attribute"))?;
 
     Ok(token)
 }
@@ -209,7 +204,7 @@ mod test {
     fn parse_search_text() {
         let html = Html::parse_document(TEST_FILE);
         let crackmes = SearchCrackMes::with_search_html(&html).unwrap();
-        let SearchCrackMes { html: _, crackmes } = crackmes;
+        let SearchCrackMes { crackmes } = crackmes;
 
         assert_eq!(
             crackmes.first(),
