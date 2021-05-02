@@ -66,16 +66,12 @@ pub struct SubGet {
 
 fn range_parser(v: &str) -> Result<(u8, u8), &'static str> {
     let mut sides = v.split("..");
-    let (first, second): (u8, u8) = (
-        sides
-            .next()
-            .and_then(|s| s.parse().ok())
-            .ok_or("Invalid beginning bound")?,
-        sides
-            .next()
-            .and_then(|s| s.parse().ok())
-            .ok_or("Invalid ending bound")?,
-    );
+
+    let (first, second): (u8, u8) = sides
+        .next()
+        .and_then(|s| s.parse().ok())
+        .zip(sides.next().and_then(|s| s.parse().ok()))
+        .ok_or("Invalid bounds")?;
 
     if sides.next().is_some() || first < 1 || second > 6 {
         return Err("Invalid range");
