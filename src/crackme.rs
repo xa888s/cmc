@@ -9,13 +9,18 @@ use strum::{Display, EnumString};
 #[derive(Debug, PartialEq, EnumString, Display)]
 pub enum Platform {
     DOS,
-    #[strum(serialize = "Mac OS X", serialize = "macos")]
+    #[strum(serialize = "macos", serialize = "Mac OS X")]
     MacOSX,
-    #[strum(serialize = "Multiplatform", serialize = "multiplatform")]
+    #[strum(serialize = "multiplatform", serialize = "Multiplatform")]
     Multiplatform,
-    #[strum(serialize = "Unix/linux etc.", serialize = "linux", serialize = "unix")]
+    #[strum(
+        serialize = "linux",
+        serialize = "unix",
+        serialize = "Unix/linux etc.",
+        serialize = "Unix/Linux"
+    )]
     UnixLinux,
-    #[strum(serialize = "Windows", serialize = "windows")]
+    #[strum(serialize = "windows", serialize = "Windows")]
     Windows,
     #[strum(serialize = "Windows 2000/XP only")]
     Windows2000XP,
@@ -23,25 +28,25 @@ pub enum Platform {
     Windows7,
     #[strum(serialize = "Windows Vista Only")]
     WindowsVista,
-    #[strum(serialize = "Unspecified/other", serialize = "other")]
+    #[strum(serialize = "other", serialize = "Unspecified/other")]
     Other,
 }
 
 #[derive(Debug, PartialEq, EnumString, Display)]
 pub enum Language {
-    #[strum(serialize = "C/C++", serialize = "cpp")]
+    #[strum(serialize = "cpp", serialize = "C/C++")]
     COrCPlusPlus,
     Assembler,
     Java,
-    #[strum(serialize = "(Visual) Basic", serialize = "vb")]
+    #[strum(serialize = "vb", serialize = "(Visual) Basic")]
     VisualBasic,
     #[strum(serialize = "Borland Delphi")]
     BorlandDelphi,
     #[strum(serialize = "Turbo Pascal")]
     TurboPascal,
-    #[strum(serialize = ".NET", serialize = "dotnet")]
+    #[strum(serialize = "dotnet", serialize = ".NET")]
     DotNet,
-    #[strum(serialize = "Unspecified/other", serialize = "other")]
+    #[strum(serialize = "other", serialize = "Unspecified/other")]
     Other,
 }
 
@@ -127,6 +132,9 @@ impl CrackMe<'_> {
             difficulty: f32,
             quality: f32
         }
+
+        // get rid of known download flags
+        info.nth(1);
 
         // make sure there (probably) hasn't been a change in the format
         assert!(info.next().is_none());

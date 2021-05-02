@@ -7,6 +7,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::{Html, Selector};
+use skim::prelude::*;
 
 const SEARCH_URL: &str = "https://crackmes.one/search";
 
@@ -20,6 +21,7 @@ pub struct SearchCrackMe<'a> {
     solutions: u64,
     comments: u64,
     stats: Stats,
+    id: &'a str,
 }
 
 impl<'a> fmt::Display for SearchCrackMe<'a> {
@@ -30,14 +32,74 @@ impl<'a> fmt::Display for SearchCrackMe<'a> {
         writeln!(f, "Upload: {}", self.date)?;
         writeln!(f, "Platform: {}", self.platform)?;
         writeln!(f, "Quality: {}", self.stats.quality)?;
+        writeln!(f, "ID: {}", self.id)?;
         write!(f, "Difficulty: {}", self.stats.difficulty)
     }
 }
 
+#[derive(Debug)]
+struct SearchItem {
+    text: String,
+    preview: String,
+    pub id: String,
+}
+
+impl SearchItem {
+    pub fn with_search(crackme: &SearchCrackMe<'_>) -> SearchItem {
+        SearchItem {
+            text: format!("{} by {}\n", crackme.name, crackme.author),
+            preview: crackme.to_string(),
+            id: crackme.id.to_string(),
+        }
+    }
+}
+
+impl SkimItem for SearchItem {
+    fn text(&self) -> Cow<str> {
+        Cow::Borrowed(&self.text)
+    }
+
+    fn preview(&self, _context: PreviewContext) -> ItemPreview {
+        ItemPreview::Text(self.preview.clone())
+    }
+}
+
 impl<'a> SearchCrackMe<'a> {
+    pub fn with_search_html(html: &'a Html) -> Result<Vec<SearchCrackMe<'a>>> {
+        let selector = Selector::parse("tr").unwrap();
+        let inner_selector = Selector::parse("td").unwrap();
+
+        // here we have each "crackme" in a list of "tr"s
+        let mut table = html
+            .select(&selector)
+            .filter(|t| t.value().classes().any(|c| c == "text-center"))
+            .map(|t| t.select(&inner_selector));
+
+        // so we parse each td inside them, which gives the info
+        let crackmes = table.try_fold::<_, _, Result<Vec<SearchCrackMe<'a>>>>(
+            Vec::new(),
+            |mut acc, info| {
+                acc.push(SearchCrackMe::with_element_iter(info)?);
+                Ok(acc)
+            },
+        )?;
+
+        Ok(crackmes)
+    }
+
     pub fn with_element_iter(
-        info: impl Iterator<Item = scraper::ElementRef<'a>>,
+        info: impl Iterator<Item = scraper::ElementRef<'a>> + Clone,
     ) -> Result<SearchCrackMe<'a>> {
+        // cloning the iterator, so it isn't that expensive
+        let id: &str = info
+            .clone()
+            .next()
+            .and_then(|td| td.children().nth(1))
+            .and_then(|a| a.value().as_element())
+            .and_then(|a| a.attr("href"))
+            .and_then(|link| link.rsplit('/').next())
+            .ok_or_else(|| anyhow!("No ID found"))?;
+
         let mut info = info
             .flat_map(|t| t.text())
             .filter(|t| !t.chars().all(char::is_whitespace))
@@ -69,6 +131,7 @@ impl<'a> SearchCrackMe<'a> {
         let stats = Stats::new(quality, difficulty);
 
         let crackme = SearchCrackMe {
+            id,
             name,
             author,
             language,
@@ -80,56 +143,6 @@ impl<'a> SearchCrackMe<'a> {
         };
 
         Ok(crackme)
-    }
-}
-
-// We have a seperate struct so that we can store the Html with it, saving some allocations
-#[derive(Debug, PartialEq)]
-pub struct SearchCrackMes<'a> {
-    crackmes: Vec<SearchCrackMe<'a>>,
-}
-
-impl<'a> fmt::Display for SearchCrackMes<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.crackmes
-            .iter()
-            .take(self.crackmes.len() - 1)
-            .try_for_each(|c| writeln!(f, "{}\n", c))?;
-
-        // special case last
-        if let Some(c) = self.crackmes.last() {
-            write!(f, "{}", c)
-        } else {
-            Ok(())
-        }
-    }
-}
-
-impl<'a> SearchCrackMes<'a> {
-    pub fn with_search_html(html: &'a Html) -> Result<SearchCrackMes<'a>> {
-        let selector = Selector::parse("tr").unwrap();
-        let inner_selector = Selector::parse("td").unwrap();
-
-        // here we have each "crackme" in a list of "tr"s
-        let mut table = html
-            .select(&selector)
-            .filter(|t| t.value().classes().any(|c| c == "text-center"))
-            .map(|t| t.select(&inner_selector));
-
-        // so we parse each td inside them, which gives the info
-        let crackmes = {
-            let crackmes: Vec<_> = table.try_fold::<_, _, Result<Vec<SearchCrackMe<'a>>>>(
-                Vec::new(),
-                |mut acc, info| {
-                    acc.push(SearchCrackMe::with_element_iter(info)?);
-                    Ok(acc)
-                },
-            )?;
-
-            SearchCrackMes { crackmes }
-        };
-
-        Ok(crackmes)
     }
 }
 
@@ -173,10 +186,38 @@ pub async fn handle_search_results<'a>(
 
     let search = Html::parse_document(&search);
 
-    let crackmes = SearchCrackMes::with_search_html(&search)?;
+    let crackmes = SearchCrackMe::with_search_html(&search)?;
 
-    println!("{}", crackmes);
+    if let Some(id) = get_choice(&crackmes) {
+        crate::get::handle_crackme(client, &id).await?;
+    }
+
     Ok(())
+}
+
+// TODO: Optimize this
+fn get_choice(input: &[SearchCrackMe<'_>]) -> Option<String> {
+    let options = SkimOptionsBuilder::default()
+        .height(Some("50%"))
+        .multi(true)
+        .preview(Some(""))
+        .build()
+        .unwrap();
+
+    let (tx, rx): (SkimItemSender, SkimItemReceiver) = unbounded();
+
+    for item in input.iter().map(SearchItem::with_search) {
+        tx.send(Arc::new(item)).ok()?;
+    }
+    drop(tx);
+
+    let selected_items = Skim::run_with(&options, Some(rx))
+        .and_then(|out| (!out.is_abort).then(|| out.selected_items))?;
+
+    selected_items
+        .get(0)
+        .and_then(|i| (**i).as_any().downcast_ref::<SearchItem>())
+        .map(|s| s.id.clone())
 }
 
 // returns the token to allow searching
@@ -203,12 +244,12 @@ mod test {
     #[test]
     fn parse_search_text() {
         let html = Html::parse_document(TEST_FILE);
-        let crackmes = SearchCrackMes::with_search_html(&html).unwrap();
-        let SearchCrackMes { crackmes } = crackmes;
+        let crackmes = SearchCrackMe::with_search_html(&html).unwrap();
 
         assert_eq!(
             crackmes.first(),
             Some(&SearchCrackMe {
+                id: "60816fca33c5d42f38520831",
                 name: "SAFE_01",
                 author: "oles",
                 language: Language::VisualBasic,
