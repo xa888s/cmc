@@ -222,14 +222,11 @@ fn get_choice(input: &[SearchCrackMe<'_>]) -> Option<String> {
 
 // returns the token to allow searching
 fn get_token(html: &Html) -> Result<&str> {
-    let selector = Selector::parse("input").unwrap();
+    let selector = Selector::parse("#token").unwrap();
 
     let token = html
         .select(&selector)
-        .find(|e| match e.value().id() {
-            Some(s) => s == "token",
-            _ => false,
-        })
+        .next()
         .and_then(|t| t.value().attr("value"))
         .ok_or_else(|| anyhow!("Couldn't parse token"))?;
 

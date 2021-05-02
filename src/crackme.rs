@@ -60,6 +60,7 @@ pub struct CrackMe<'a> {
     download_href: &'a str,
     platform: Platform,
     stats: Stats,
+    description: &'a str,
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -142,6 +143,8 @@ impl CrackMe<'_> {
         let name = CrackMe::parse_name(&html)?;
         let download_href = CrackMe::parse_download_link(&html)?;
 
+        let description = CrackMe::get_description(&html)?;
+
         let stats = Stats {
             difficulty,
             quality,
@@ -149,6 +152,7 @@ impl CrackMe<'_> {
 
         // put together our crackme and return it
         let crackme = CrackMe {
+            description,
             name,
             upload,
             author,
@@ -200,6 +204,19 @@ impl CrackMe<'_> {
 
         Ok(download_href)
     }
+
+    fn get_description(html: &Html) -> Result<&str> {
+        let selector = Selector::parse("div").unwrap();
+
+        let description = html
+            .select(&selector)
+            .filter(|div| div.value().classes().any(|class| class == "col-12"))
+            .nth(1)
+            .and_then(|div| div.select(&Selector::parse("span").unwrap()).next())
+            .and_then(|span| span.text().next());
+
+        description.ok_or_else(|| anyhow!("No description"))
+    }
 }
 
 #[cfg(test)]
@@ -215,6 +232,7 @@ mod tests {
         assert_eq!(
             crackme,
             CrackMe {
+                description: "easy crackme ..enjoy )",
                 name: "SAFE_01",
                 author: "oles",
                 upload: "12:44 PM 04/22/2021",
