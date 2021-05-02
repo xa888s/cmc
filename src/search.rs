@@ -47,7 +47,7 @@ struct SearchItem {
 impl SearchItem {
     pub fn with_search(crackme: &SearchCrackMe<'_>) -> SearchItem {
         SearchItem {
-            text: format!("{} by {}\n", crackme.name, crackme.author),
+            text: format!("{} by {}", crackme.name, crackme.author),
             preview: crackme.to_string(),
             id: crackme.id.to_string(),
         }
