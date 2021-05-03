@@ -8,6 +8,7 @@ mod macros;
 mod mode;
 
 use cli::*;
+use mode::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,10 +17,10 @@ async fn main() -> Result<()> {
 
     match args.nested {
         Command::Get { id } => {
-            mode::handle_crackme(&mut client, &id).await?;
+            get::handle_crackme(&mut client, &id).await?;
         }
         Command::Search(args) => {
-            mode::handle_search_results(&mut client, args).await?;
+            search::handle_search_results(&mut client, args).await?;
         }
     }
     Ok(())

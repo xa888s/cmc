@@ -1,8 +1,8 @@
-use crate::crackme::overview::CrackMe;
+use crate::crackme::overview::OverviewCrackMe;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::Html;
-use std::path::Path;
+use std::{fs, io::Cursor, path::Path};
 use zip::read::ZipArchive;
 
 const MAIN_URL: &str = "https://crackmes.one";
@@ -10,11 +10,10 @@ const GET_URL: &str = "https://crackmes.one/crackme/";
 
 fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
     // wrap our bytes with a cursor for the seek implementation
-    let mut zip = ZipArchive::new(std::io::Cursor::new(bytes))?;
+    let mut zip = ZipArchive::new(Cursor::new(bytes))?;
 
     // writing the zip file's contents to disk, copied from the zip crates extract method on
     // ZipArchive
-    use std::fs;
     for i in 0..zip.len() {
         let first = zip.by_index_decrypt(i, b"crackmes.one")?;
         let mut file = match first {
@@ -63,11 +62,11 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = CrackMe::with_full_html(&html)?;
+    let crackme = OverviewCrackMe::with_full_html(&html)?;
 
     // getting the zip file
     let bytes = client
-        .get(MAIN_URL.to_string() + crackme.download_href())
+        .get(MAIN_URL.to_string() + crackme.extra().download_href())
         .send()
         .await?
         .bytes()

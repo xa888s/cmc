@@ -1,103 +1,41 @@
-use crate::next_parse;
+use crate::{
+    crackme::{CrackMe, Language, Platform, Stats},
+    next_parse,
+};
 use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
 use std::fmt::{self, Display, Formatter};
-use strum::{Display, EnumString};
-
-// we allow this so the mapping is more one to one
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, PartialEq, EnumString, Display)]
-pub enum Platform {
-    DOS,
-    #[strum(serialize = "macos", serialize = "Mac OS X")]
-    MacOSX,
-    #[strum(serialize = "multiplatform", serialize = "Multiplatform")]
-    Multiplatform,
-    #[strum(
-        serialize = "linux",
-        serialize = "unix",
-        serialize = "Unix/linux etc.",
-        serialize = "Unix/Linux"
-    )]
-    UnixLinux,
-    #[strum(serialize = "windows", serialize = "Windows")]
-    Windows,
-    #[strum(serialize = "Windows 2000/XP only")]
-    Windows2000XP,
-    #[strum(serialize = "Windows 7 Only")]
-    Windows7,
-    #[strum(serialize = "Windows Vista Only")]
-    WindowsVista,
-    #[strum(serialize = "other", serialize = "Unspecified/other")]
-    Other,
-}
-
-#[derive(Debug, PartialEq, EnumString, Display)]
-pub enum Language {
-    #[strum(serialize = "cpp", serialize = "C/C++")]
-    COrCPlusPlus,
-    Assembler,
-    Java,
-    #[strum(serialize = "vb", serialize = "(Visual) Basic")]
-    VisualBasic,
-    #[strum(serialize = "Borland Delphi")]
-    BorlandDelphi,
-    #[strum(serialize = "Turbo Pascal")]
-    TurboPascal,
-    #[strum(serialize = "dotnet", serialize = ".NET")]
-    DotNet,
-    #[strum(serialize = "other", serialize = "Unspecified/other")]
-    Other,
-}
 
 // Holds the contents of a crackme
 #[derive(Debug, PartialEq)]
-pub struct CrackMe<'a> {
-    name: &'a str,
-    author: &'a str,
-    language: Language,
-    upload: &'a str,
+pub struct OverviewCrackMe<'a> {
     download_href: &'a str,
-    platform: Platform,
-    stats: Stats,
     description: &'a str,
 }
 
-#[derive(Debug, PartialEq, Default)]
-pub struct Stats {
-    pub quality: f32,
-    pub difficulty: f32,
-}
-
-impl Stats {
-    pub fn new(quality: f32, difficulty: f32) -> Stats {
-        Stats {
-            quality,
-            difficulty,
+impl<'a> OverviewCrackMe<'a> {
+    pub fn new(download_href: &'a str, description: &'a str) -> OverviewCrackMe<'a> {
+        OverviewCrackMe {
+            download_href,
+            description,
         }
     }
 }
 
-impl Display for CrackMe<'_> {
+impl Display for OverviewCrackMe<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Name: {}", self.name)?;
-        writeln!(f, "Author: {}", self.author)?;
-        writeln!(f, "Language: {}", self.language)?;
-        writeln!(f, "Upload: {}", self.upload)?;
         writeln!(
             f,
             "Download link: https://crackmes.one{}",
             self.download_href
         )?;
-        writeln!(f, "Platform: {}", self.platform)?;
-        writeln!(f, "Quality: {:.1}", self.stats.quality)?;
-        write!(f, "Difficulty: {:.1}", self.stats.difficulty)
+        write!(f, "Description: {}", self.description)
     }
 }
 
-impl CrackMe<'_> {
+impl<'a> OverviewCrackMe<'a> {
     // TODO: Clean up this whole function
-    pub fn with_full_html(html: &Html) -> Result<CrackMe<'_>> {
+    pub fn with_full_html(html: &'a Html) -> Result<CrackMe<'a, Self>> {
         let selector = Selector::parse("div").unwrap();
 
         // doing all our passes
@@ -125,7 +63,7 @@ impl CrackMe<'_> {
             language: Language
         }
 
-        let upload = info.next().ok_or_else(|| anyhow!("No upload date!"))?;
+        let date = info.next().ok_or_else(|| anyhow!("No upload date!"))?;
 
         next_parse! {
             info,
@@ -140,26 +78,27 @@ impl CrackMe<'_> {
         // make sure there (probably) hasn't been a change in the format
         assert!(info.next().is_none());
 
-        let name = CrackMe::parse_name(&html)?;
-        let download_href = CrackMe::parse_download_link(&html)?;
+        let name = OverviewCrackMe::parse_name(&html)?;
+        let download_href = OverviewCrackMe::parse_download_link(&html)?;
 
-        let description = CrackMe::get_description(&html)?;
+        let description = OverviewCrackMe::get_description(&html)?;
 
         let stats = Stats {
             difficulty,
             quality,
         };
 
+        let overview = OverviewCrackMe::new(download_href, description);
+
         // put together our crackme and return it
         let crackme = CrackMe {
-            description,
             name,
-            upload,
+            date,
             author,
             language,
-            download_href,
             platform,
             stats,
+            other: overview,
         };
 
         Ok(crackme)
@@ -227,21 +166,23 @@ mod tests {
     #[test]
     fn parse_full_crackme() {
         let html = Html::parse_document(TEST_FILE);
-        let crackme = CrackMe::with_full_html(&html).unwrap();
+        let crackme = OverviewCrackMe::with_full_html(&html).unwrap();
 
         assert_eq!(
             crackme,
             CrackMe {
-                description: "easy crackme ..enjoy )",
                 name: "SAFE_01",
                 author: "oles",
-                upload: "12:44 PM 04/22/2021",
+                date: "12:44 PM 04/22/2021",
                 platform: Platform::Windows,
                 language: Language::VisualBasic,
-                download_href: "/static/crackme/60816fca33c5d42f38520831.zip",
                 stats: Stats {
                     quality: 4.5,
                     difficulty: 1.0,
+                },
+                other: OverviewCrackMe {
+                    download_href: "/static/crackme/60816fca33c5d42f38520831.zip",
+                    description: "easy crackme ..enjoy )",
                 }
             }
         );

@@ -1,4 +1,4 @@
-use crate::crackme::overview::{Language, Platform};
+use crate::crackme::{Language, Platform};
 use structopt::StructOpt;
 
 #[derive(StructOpt, PartialEq, Debug)]
