@@ -59,6 +59,7 @@ impl SkimItem for SearchItem {
         Cow::Borrowed(&self.text)
     }
 
+    // TODO: Find a way to show the description of each search result
     fn preview(&self, _context: PreviewContext) -> ItemPreview {
         ItemPreview::Text(self.preview.clone())
     }
