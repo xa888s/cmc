@@ -1,4 +1,4 @@
-use crate::crackme::CrackMe;
+use crate::crackme::overview::CrackMe;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::Html;

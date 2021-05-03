@@ -222,7 +222,7 @@ impl CrackMe<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const TEST_FILE: &str = include_str!("../static/test.html");
+    const TEST_FILE: &str = include_str!("../../static/test.html");
 
     #[test]
     fn parse_full_crackme() {

@@ -4,9 +4,8 @@ use structopt::StructOpt;
 
 mod cli;
 mod crackme;
-mod get;
 mod macros;
-mod search;
+mod mode;
 
 use cli::*;
 
@@ -17,10 +16,10 @@ async fn main() -> Result<()> {
 
     match args.nested {
         Command::Get { id } => {
-            get::handle_crackme(&mut client, &id).await?;
+            mode::handle_crackme(&mut client, &id).await?;
         }
         Command::Search(args) => {
-            search::handle_search_results(&mut client, args).await?;
+            mode::handle_search_results(&mut client, args).await?;
         }
     }
     Ok(())
