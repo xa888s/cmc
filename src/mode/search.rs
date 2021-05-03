@@ -50,7 +50,7 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
 
     let search = SearchPage(Html::parse_document(&search));
 
-    let crackmes: Vec<CrackMe<'_, ListCrackMe<'_>>> = (&search).try_into()?;
+    let crackmes: Vec<CrackMe<'_, ListCrackMe>> = (&search).try_into()?;
 
     if let Some(id) = get_choice(&crackmes) {
         get::handle_crackme(client, &id).await?;
@@ -60,7 +60,7 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
 }
 
 // TODO: Optimize this
-fn get_choice(input: &[CrackMe<'_, ListCrackMe<'_>>]) -> Option<String> {
+fn get_choice(input: &[CrackMe<'_, ListCrackMe>]) -> Option<String> {
     use skim::prelude::*;
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))

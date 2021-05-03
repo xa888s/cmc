@@ -9,39 +9,29 @@ use std::fmt::{self, Display, Formatter};
 // Holds the contents of a crackme
 #[derive(Debug, PartialEq)]
 pub struct OverviewCrackMe<'a> {
-    download_href: &'a str,
     description: &'a str,
 }
 
 impl<'a> OverviewCrackMe<'a> {
-    pub fn new(download_href: &'a str, description: &'a str) -> OverviewCrackMe<'a> {
-        OverviewCrackMe {
-            download_href,
-            description,
-        }
+    pub fn new(description: &'a str) -> OverviewCrackMe<'a> {
+        OverviewCrackMe { description }
     }
 }
 
 impl Display for OverviewCrackMe<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(
-            f,
-            "Download link: https://crackmes.one{}",
-            self.download_href
-        )?;
         write!(f, "Description: {}", self.description)
     }
 }
 
 impl<'a> OverviewCrackMe<'a> {
     // TODO: Clean up this whole function
-    pub fn with_full_html(html: &'a Html) -> Result<CrackMe<'a, Self>> {
-        let selector = Selector::parse("div").unwrap();
+    pub fn with_full_html(html: &'a Html, id: &'a str) -> Result<CrackMe<'a, Self>> {
+        let selector = Selector::parse("div.columns.panel-background div.column.col-3").unwrap();
 
         // doing all our passes
         let mut info = html
             .select(&selector)
-            .filter(|e| e.value().classes().any(|s| s == "col-3"))
             .flat_map(|e| e.text())
             .filter(|t| !t.chars().all(char::is_whitespace))
             .map(|t| t.trim())
@@ -79,7 +69,6 @@ impl<'a> OverviewCrackMe<'a> {
         assert!(info.next().is_none());
 
         let name = OverviewCrackMe::parse_name(&html)?;
-        let download_href = OverviewCrackMe::parse_download_link(&html)?;
 
         let description = OverviewCrackMe::get_description(&html)?;
 
@@ -88,7 +77,7 @@ impl<'a> OverviewCrackMe<'a> {
             quality,
         };
 
-        let overview = OverviewCrackMe::new(download_href, description);
+        let overview = OverviewCrackMe::new(description);
 
         // put together our crackme and return it
         let crackme = CrackMe {
@@ -98,14 +87,11 @@ impl<'a> OverviewCrackMe<'a> {
             language,
             platform,
             stats,
+            id,
             other: overview,
         };
 
         Ok(crackme)
-    }
-
-    pub fn download_href(&self) -> &str {
-        &self.download_href
     }
 
     fn parse_name(html: &Html) -> Result<&str> {
@@ -130,28 +116,12 @@ impl<'a> OverviewCrackMe<'a> {
         Ok(name)
     }
 
-    fn parse_download_link(html: &Html) -> Result<&str> {
-        // guaranteed to parse
-        let selector = Selector::parse("a").unwrap();
-
-        // finding the download link
-        let download_href = html
-            .select(&selector)
-            .find(|e| e.value().classes().any(|c| c == "btn-download"))
-            .and_then(|a| a.value().attr("href"))
-            .ok_or_else(|| anyhow!("No href value!"))?;
-
-        Ok(download_href)
-    }
-
     fn get_description(html: &Html) -> Result<&str> {
-        let selector = Selector::parse("div").unwrap();
+        let selector = Selector::parse("div.columns div.col-12 span").unwrap();
 
         let description = html
             .select(&selector)
-            .filter(|div| div.value().classes().any(|class| class == "col-12"))
-            .nth(1)
-            .and_then(|div| div.select(&Selector::parse("span").unwrap()).next())
+            .next()
             .and_then(|span| span.text().next());
 
         description.ok_or_else(|| anyhow!("No description"))
@@ -166,7 +136,8 @@ mod tests {
     #[test]
     fn parse_full_crackme() {
         let html = Html::parse_document(TEST_FILE);
-        let crackme = OverviewCrackMe::with_full_html(&html).unwrap();
+        let id = "60816fca33c5d42f38520831";
+        let crackme = OverviewCrackMe::with_full_html(&html, id).unwrap();
 
         assert_eq!(
             crackme,
@@ -180,8 +151,8 @@ mod tests {
                     quality: 4.5,
                     difficulty: 1.0,
                 },
+                id,
                 other: OverviewCrackMe {
-                    download_href: "/static/crackme/60816fca33c5d42f38520831.zip",
                     description: "easy crackme ..enjoy )",
                 }
             }

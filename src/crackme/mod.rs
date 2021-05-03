@@ -17,6 +17,7 @@ where
     date: &'a str,
     platform: Platform,
     stats: Stats,
+    id: &'a str,
     other: T,
 }
 
@@ -24,6 +25,10 @@ impl<'a, T> CrackMe<'a, T>
 where
     T: fmt::Display + fmt::Debug,
 {
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
     pub fn extra(&self) -> &T {
         &self.other
     }

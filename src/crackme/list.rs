@@ -12,15 +12,13 @@ use scraper::{Html, Selector};
 use skim::{ItemPreview, PreviewContext, SkimItem};
 
 #[derive(Debug, PartialEq)]
-pub struct ListCrackMe<'a> {
+pub struct ListCrackMe {
     solutions: u64,
     comments: u64,
-    id: &'a str,
 }
 
-impl<'a> fmt::Display for ListCrackMe<'a> {
+impl fmt::Display for ListCrackMe {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "ID: {}", self.id)?;
         writeln!(f, "Solutions: {}", self.solutions)?;
         writeln!(f, "Comments: {}", self.comments)
     }
@@ -34,16 +32,16 @@ pub struct ListItem {
 }
 
 impl ListItem {
-    pub fn with_search(crackme: &CrackMe<'_, ListCrackMe<'_>>) -> ListItem {
+    pub fn with_search(crackme: &CrackMe<'_, ListCrackMe>) -> ListItem {
         ListItem {
             text: format!("{} by {}", crackme.name, crackme.author),
             preview: crackme.to_string(),
-            id: crackme.extra().id.to_string(),
+            id: crackme.id().to_string(),
         }
     }
 }
 
-pub fn parse_list(html: &Html) -> Result<Vec<CrackMe<'_, ListCrackMe<'_>>>> {
+pub fn parse_list(html: &Html) -> Result<Vec<CrackMe<'_, ListCrackMe>>> {
     let selector = Selector::parse("#content-list .text-center").unwrap();
 
     let crackmes = html
@@ -71,7 +69,7 @@ pub fn parse_list(html: &Html) -> Result<Vec<CrackMe<'_, ListCrackMe<'_>>>> {
 
 pub fn parse_row<'a>(
     (id, mut tr): (&'a str, impl Iterator<Item = &'a str>),
-) -> Result<CrackMe<'a, ListCrackMe<'a>>> {
+) -> Result<CrackMe<'a, ListCrackMe>> {
     let (name, author) = (
         tr.next().ok_or_else(|| anyhow!("No name found!"))?,
         tr.next().ok_or_else(|| anyhow!("No author found!"))?,
@@ -104,10 +102,10 @@ pub fn parse_row<'a>(
         platform,
         date,
         stats,
+        id,
         other: ListCrackMe {
             solutions,
             comments,
-            id,
         },
     };
 
@@ -151,10 +149,10 @@ mod test {
                     quality: 4.0,
                     difficulty: 4.0
                 },
+                id: "608b747633c5d458ce0ec753",
                 other: ListCrackMe {
                     comments: 1,
                     solutions: 0,
-                    id: "608b747633c5d458ce0ec753"
                 }
             })
         );
@@ -178,10 +176,10 @@ mod test {
                     quality: 4.5,
                     difficulty: 1.0
                 },
+                id: "60816fca33c5d42f38520831",
                 other: ListCrackMe {
                     solutions: 0,
                     comments: 0,
-                    id: "60816fca33c5d42f38520831"
                 }
             })
         );

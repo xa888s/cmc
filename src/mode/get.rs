@@ -62,11 +62,11 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = OverviewCrackMe::with_full_html(&html)?;
+    let crackme = OverviewCrackMe::with_full_html(&html, id)?;
 
     // getting the zip file
     let bytes = client
-        .get(MAIN_URL.to_string() + crackme.extra().download_href())
+        .get(MAIN_URL.to_string() + "static/crackme/" + crackme.id() + ".zip")
         .send()
         .await?
         .bytes()
