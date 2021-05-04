@@ -66,7 +66,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
 
     // getting the zip file
     let bytes = client
-        .get(MAIN_URL.to_string() + "static/crackme/" + crackme.id() + ".zip")
+        .get(MAIN_URL.to_string() + "/static/crackme/" + crackme.id() + ".zip")
         .send()
         .await?
         .bytes()
