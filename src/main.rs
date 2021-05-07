@@ -22,6 +22,9 @@ async fn main() -> Result<()> {
         Command::Search(args) => {
             search::handle_search_results(&mut client, args).await?;
         }
+        Command::Latest { page } => {
+            latest::handle_latest_results(&mut client, page).await?;
+        }
     }
     Ok(())
 }

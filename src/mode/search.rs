@@ -1,11 +1,11 @@
 use crate::{
     cli::SearchArgs,
     crackme::{
-        list::{ListCrackMe, ListItem},
+        list::ListCrackMe,
         search::{SearchPage, SEARCH_URL},
         CrackMe,
     },
-    mode::get,
+    mode::{get, self},
 };
 
 use anyhow::{anyhow, Result};
@@ -52,37 +52,11 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
 
     let crackmes: Vec<CrackMe<'_, ListCrackMe>> = (&search).try_into()?;
 
-    if let Some(id) = get_choice(&crackmes) {
+    if let Some(id) = mode::get_choice(&crackmes) {
         get::handle_crackme(client, &id).await?;
     }
 
     Ok(())
-}
-
-// TODO: Optimize this
-fn get_choice(input: &[CrackMe<'_, ListCrackMe>]) -> Option<String> {
-    use skim::prelude::*;
-    let options = SkimOptionsBuilder::default()
-        .height(Some("50%"))
-        .multi(true)
-        .preview(Some(""))
-        .build()
-        .unwrap();
-
-    let (tx, rx): (SkimItemSender, SkimItemReceiver) = unbounded();
-
-    for item in input.iter().map(ListItem::with_search) {
-        tx.send(Arc::new(item)).ok()?;
-    }
-    drop(tx);
-
-    let selected_items = Skim::run_with(&options, Some(rx))
-        .and_then(|out| (!out.is_abort).then(|| out.selected_items))?;
-
-    selected_items
-        .get(0)
-        .and_then(|i| (**i).as_any().downcast_ref::<ListItem>())
-        .map(|s| s.id.clone())
 }
 
 // returns the token to allow searching

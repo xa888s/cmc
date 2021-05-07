@@ -15,11 +15,18 @@ pub enum Command {
         #[structopt(help = "The ID of the crackme", parse(try_from_str = id_parser))]
         id: String,
     },
+
     #[structopt(
         name = "search",
         about = "Used to search for crackmes based on some criteria (or default search if no criteria chosen)"
     )]
     Search(SearchArgs),
+
+    #[structopt(name = "latest", about = "The crackmes from the latest page")]
+    Latest {
+        #[structopt(help = "The page number", default_value = "1")]
+        page: u64,
+    },
 }
 
 #[derive(StructOpt, PartialEq, Debug)]
@@ -53,15 +60,6 @@ pub struct SearchArgs {
 
     #[structopt(help = "Platform of crackme", short, long)]
     pub platform: Option<Platform>,
-}
-
-#[derive(StructOpt, PartialEq, Debug)]
-pub struct SubGet {
-    #[structopt(
-        help = "The ID of the crackme",
-        parse(try_from_str = id_parser)
-    )]
-    pub id: String,
 }
 
 fn range_parser(v: &str) -> Result<(u8, u8), &'static str> {
