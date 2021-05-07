@@ -1,4 +1,5 @@
 use crate::crackme::overview::OverviewCrackMe;
+use crate::crackme::CrackMe;
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::Html;
@@ -8,7 +9,7 @@ use zip::read::ZipArchive;
 const MAIN_URL: &str = "https://crackmes.one";
 const GET_URL: &str = "https://crackmes.one/crackme/";
 
-fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
+fn write_zip_to_disk(bytes: Vec<u8>, crackme: &CrackMe<'_, OverviewCrackMe>) -> Result<()> {
     // wrap our bytes with a cursor for the seek implementation
     let mut zip = ZipArchive::new(Cursor::new(bytes))?;
 
@@ -31,7 +32,7 @@ fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
             .enclosed_name()
             .ok_or_else(|| anyhow!("Invalid file path"))?;
 
-        let outpath = Path::new(id).join(filepath);
+        let outpath = Path::new(crackme.name()).join(filepath);
 
         if file.name().ends_with('/') {
             fs::create_dir_all(&outpath)?;
@@ -75,7 +76,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
 
     // writing the files contained inside it to disk (in a new folder in the current directory with
     // its name being the id)
-    write_zip_to_disk(bytes, id)?;
+    write_zip_to_disk(bytes, &crackme)?;
     println!("{}", crackme);
 
     Ok(())

@@ -164,7 +164,7 @@ dependencies = [
 
 [[package]]
 name = "cmg"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "reqwest",
@@ -2387,7 +2387,7 @@ dependencies = [
 [[package]]
 name = "zip"
 version = "0.5.12"
-source = "git+https://github.com/xa888s/zip#acfa404489486e311eab9a66ecacd1dd0419ef1a"
+source = "git+https://github.com/BenjaminRi/zip-rs?branch=infozip-decrypt#aee5ff09bc112779c671e9ad22ffd76dafb7f903"
 dependencies = [
  "byteorder",
  "bzip2",

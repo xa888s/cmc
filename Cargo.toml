@@ -16,4 +16,4 @@ strum = { version = "0.20.0", features = ["derive"] }
 tokio = { version = "1.5.0", features = ["full"] }
 # FIXME once zip-rs allows invalid passwords or if there is a bug in the
 # password verification that is fixed, we can use upstream zip
-zip = { git = "https://github.com/xa888s/zip" }
+zip = { git = "https://github.com/BenjaminRi/zip-rs", branch = "infozip-decrypt" }

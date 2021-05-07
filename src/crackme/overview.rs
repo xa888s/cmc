@@ -20,7 +20,12 @@ impl<'a> OverviewCrackMe<'a> {
 
 impl Display for OverviewCrackMe<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "Description: {}", self.description)
+        // For long names (multiline) put on seperate line
+        if !self.description.contains('\n') {
+            write!(f, "Description: {}", self.description)
+        } else {
+            write!(f, "Description:\n{}", self.description)
+        }
     }
 }
 
@@ -73,8 +78,8 @@ impl<'a> OverviewCrackMe<'a> {
         let description = OverviewCrackMe::get_description(&html)?;
 
         let stats = Stats {
-            difficulty,
             quality,
+            difficulty,
         };
 
         let overview = OverviewCrackMe::new(description);

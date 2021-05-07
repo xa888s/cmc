@@ -25,6 +25,10 @@ impl<'a, T> CrackMe<'a, T>
 where
     T: fmt::Display + fmt::Debug,
 {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
     pub fn id(&self) -> &str {
         &self.id
     }
