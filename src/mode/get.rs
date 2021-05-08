@@ -1,20 +1,19 @@
-use crate::crackme::CrackMe;
+use crate::crackme::overview::{OverviewCrackMe, OverviewData};
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::Html;
-use std::path::Path;
+use std::{fs, io::Cursor, path::Path};
 use zip::read::ZipArchive;
 
 const MAIN_URL: &str = "https://crackmes.one";
 const GET_URL: &str = "https://crackmes.one/crackme/";
 
-fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
+fn write_zip_to_disk(bytes: Vec<u8>, crackme: &OverviewCrackMe<'_>) -> Result<()> {
     // wrap our bytes with a cursor for the seek implementation
-    let mut zip = ZipArchive::new(std::io::Cursor::new(bytes))?;
+    let mut zip = ZipArchive::new(Cursor::new(bytes))?;
 
     // writing the zip file's contents to disk, copied from the zip crates extract method on
     // ZipArchive
-    use std::fs;
     for i in 0..zip.len() {
         let first = zip.by_index_decrypt(i, b"crackmes.one")?;
         let mut file = match first {
@@ -32,7 +31,7 @@ fn write_zip_to_disk(bytes: Vec<u8>, id: &str) -> Result<()> {
             .enclosed_name()
             .ok_or_else(|| anyhow!("Invalid file path"))?;
 
-        let outpath = Path::new(id).join(filepath);
+        let outpath = Path::new(crackme.name()).join(filepath);
 
         if file.name().ends_with('/') {
             fs::create_dir_all(&outpath)?;
@@ -63,11 +62,11 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = CrackMe::with_full_html(&html)?;
+    let crackme = OverviewData::with_full_html(&html, id)?;
 
     // getting the zip file
     let bytes = client
-        .get(MAIN_URL.to_string() + crackme.download_href())
+        .get(MAIN_URL.to_string() + "/static/crackme/" + crackme.id() + ".zip")
         .send()
         .await?
         .bytes()
@@ -76,7 +75,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
 
     // writing the files contained inside it to disk (in a new folder in the current directory with
     // its name being the id)
-    write_zip_to_disk(bytes, id)?;
+    write_zip_to_disk(bytes, &crackme)?;
     println!("{}", crackme);
 
     Ok(())

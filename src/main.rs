@@ -4,11 +4,11 @@ use structopt::StructOpt;
 
 mod cli;
 mod crackme;
-mod get;
 mod macros;
-mod search;
+mod mode;
 
 use cli::*;
+use mode::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -21,6 +21,9 @@ async fn main() -> Result<()> {
         }
         Command::Search(args) => {
             search::handle_search_results(&mut client, args).await?;
+        }
+        Command::Latest { page } => {
+            latest::handle_latest_results(&mut client, page).await?;
         }
     }
     Ok(())
