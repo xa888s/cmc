@@ -30,7 +30,6 @@ where
     pub fn id(&self) -> &str {
         &self.id
     }
-
 }
 
 impl<'a, T> fmt::Display for CrackMe<'a, T>
