@@ -1,5 +1,4 @@
-use crate::crackme::overview::OverviewCrackMe;
-use crate::crackme::CrackMe;
+use crate::crackme::overview::{OverviewCrackMe, OverviewData};
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::Html;
@@ -9,7 +8,7 @@ use zip::read::ZipArchive;
 const MAIN_URL: &str = "https://crackmes.one";
 const GET_URL: &str = "https://crackmes.one/crackme/";
 
-fn write_zip_to_disk(bytes: Vec<u8>, crackme: &CrackMe<'_, OverviewCrackMe>) -> Result<()> {
+fn write_zip_to_disk(bytes: Vec<u8>, crackme: &OverviewCrackMe<'_>) -> Result<()> {
     // wrap our bytes with a cursor for the seek implementation
     let mut zip = ZipArchive::new(Cursor::new(bytes))?;
 
@@ -63,7 +62,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = OverviewCrackMe::with_full_html(&html, id)?;
+    let crackme = OverviewData::with_full_html(&html, id)?;
 
     // getting the zip file
     let bytes = client

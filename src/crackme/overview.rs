@@ -6,19 +6,21 @@ use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
 use std::fmt::{self, Display, Formatter};
 
+pub type OverviewCrackMe<'a> = CrackMe<'a, OverviewData<'a>>;
+
 // Holds the contents of a crackme
 #[derive(Debug, PartialEq)]
-pub struct OverviewCrackMe<'a> {
+pub struct OverviewData<'a> {
     description: &'a str,
 }
 
-impl<'a> OverviewCrackMe<'a> {
-    pub fn new(description: &'a str) -> OverviewCrackMe<'a> {
-        OverviewCrackMe { description }
+impl<'a> OverviewData<'a> {
+    pub fn new(description: &'a str) -> OverviewData<'a> {
+        OverviewData { description }
     }
 }
 
-impl Display for OverviewCrackMe<'_> {
+impl Display for OverviewData<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         // For long names (multiline) put on seperate line
         if !self.description.contains('\n') {
@@ -29,9 +31,9 @@ impl Display for OverviewCrackMe<'_> {
     }
 }
 
-impl<'a> OverviewCrackMe<'a> {
+impl<'a> OverviewData<'a> {
     // TODO: Clean up this whole function
-    pub fn with_full_html(html: &'a Html, id: &'a str) -> Result<CrackMe<'a, Self>> {
+    pub fn with_full_html(html: &'a Html, id: &'a str) -> Result<OverviewCrackMe<'a>> {
         let selector = Selector::parse("div.columns.panel-background div.column.col-3").unwrap();
 
         // doing all our passes
@@ -73,16 +75,16 @@ impl<'a> OverviewCrackMe<'a> {
         // make sure there (probably) hasn't been a change in the format
         assert!(info.next().is_none());
 
-        let name = OverviewCrackMe::parse_name(&html)?;
+        let name = OverviewData::parse_name(&html)?;
 
-        let description = OverviewCrackMe::get_description(&html)?;
+        let description = OverviewData::get_description(&html)?;
 
         let stats = Stats {
             quality,
             difficulty,
         };
 
-        let overview = OverviewCrackMe::new(description);
+        let overview = OverviewData::new(description);
 
         // put together our crackme and return it
         let crackme = CrackMe {
@@ -142,7 +144,7 @@ mod tests {
     fn parse_full_crackme() {
         let html = Html::parse_document(TEST_FILE);
         let id = "60816fca33c5d42f38520831";
-        let crackme = OverviewCrackMe::with_full_html(&html, id).unwrap();
+        let crackme = OverviewData::with_full_html(&html, id).unwrap();
 
         assert_eq!(
             crackme,
@@ -157,7 +159,7 @@ mod tests {
                     difficulty: 1.0,
                 },
                 id,
-                other: OverviewCrackMe {
+                other: OverviewData {
                     description: "easy crackme ..enjoy )",
                 }
             }

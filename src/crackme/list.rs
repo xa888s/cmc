@@ -43,6 +43,17 @@ impl ListItem {
     }
 }
 
+impl SkimItem for ListItem {
+    fn text(&self) -> Cow<str> {
+        Cow::Borrowed(&self.text)
+    }
+
+    // TODO: Find a way to show the description of each search result
+    fn preview(&self, _context: PreviewContext) -> ItemPreview {
+        ItemPreview::Text(self.preview.clone())
+    }
+}
+
 pub fn parse_list(html: &Html) -> Result<Vec<ListCrackMe<'_>>> {
     let selector = Selector::parse("#content-list .text-center").unwrap();
 
@@ -112,17 +123,6 @@ pub fn parse_row<'a>(
     };
 
     Ok(crackme)
-}
-
-impl SkimItem for ListItem {
-    fn text(&self) -> Cow<str> {
-        Cow::Borrowed(&self.text)
-    }
-
-    // TODO: Find a way to show the description of each search result
-    fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        ItemPreview::Text(self.preview.clone())
-    }
 }
 
 #[cfg(test)]
