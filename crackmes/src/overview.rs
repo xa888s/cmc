@@ -1,8 +1,7 @@
 use crate::{
-    crackme::{CrackMe, Language, Platform, Stats},
-    next_parse,
+    error::{CrackMeError, CrackMeResult},
+    next_parse, CrackMe, Language, Platform, Stats,
 };
-use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
 use std::fmt::{self, Display, Formatter};
 
@@ -33,7 +32,7 @@ impl Display for OverviewData<'_> {
 
 impl<'a> OverviewData<'a> {
     // TODO: Clean up this whole function
-    pub fn with_full_html(html: &'a Html, id: &'a str) -> Result<OverviewCrackMe<'a>> {
+    pub fn with_full_html(html: &'a Html, id: &'a str) -> CrackMeResult<OverviewCrackMe<'a>> {
         let selector = Selector::parse("div.columns.panel-background div.column.col-3").unwrap();
 
         // doing all our passes
@@ -53,14 +52,14 @@ impl<'a> OverviewData<'a> {
         // difficulty
         // quality
 
-        let author = info.next().ok_or_else(|| anyhow!("No author!"))?;
+        let author = info.next().ok_or(CrackMeError::NotFound("author"))?;
 
         next_parse! {
             info,
             language: Language
         }
 
-        let date = info.next().ok_or_else(|| anyhow!("No upload date!"))?;
+        let date = info.next().ok_or(CrackMeError::NotFound("upload"))?;
 
         next_parse! {
             info,
@@ -101,7 +100,7 @@ impl<'a> OverviewData<'a> {
         Ok(crackme)
     }
 
-    fn parse_name(html: &Html) -> Result<&str> {
+    fn parse_name(html: &Html) -> CrackMeResult<&str> {
         // the name is the only h3 element
         let selector = Selector::parse("h3").unwrap();
 
@@ -114,7 +113,7 @@ impl<'a> OverviewData<'a> {
                 .next()
                 .and_then(|t| t.text().nth(1))
                 .and_then(|t| t.split("'s ").nth(1))
-                .ok_or_else(|| anyhow!("No h3 element for name!"))?;
+                .ok_or(CrackMeError::NotFound("h3"))?;
 
             // FIXME: use actual parsing
             text
@@ -123,7 +122,7 @@ impl<'a> OverviewData<'a> {
         Ok(name)
     }
 
-    fn get_description(html: &Html) -> Result<&str> {
+    fn get_description(html: &Html) -> CrackMeResult<&str> {
         let selector = Selector::parse("div.columns div.col-12 span").unwrap();
 
         let description = html
@@ -131,14 +130,14 @@ impl<'a> OverviewData<'a> {
             .next()
             .and_then(|span| span.text().next());
 
-        description.ok_or_else(|| anyhow!("No description"))
+        description.ok_or(CrackMeError::NotFound("description"))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    const TEST_FILE: &str = include_str!("../../static/test.html");
+    const TEST_FILE: &str = include_str!("../static/test.html");
 
     #[test]
     fn parse_full_crackme() {

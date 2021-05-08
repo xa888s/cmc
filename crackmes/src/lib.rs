@@ -1,5 +1,11 @@
+//! Library for parsing crackmes from [crackmes.one](https://crackmes.one)
+
+pub mod error;
 pub mod list;
+mod macros;
 pub mod overview;
+
+pub use scraper::{Html, Selector};
 
 use std::fmt;
 use strum::{Display, EnumString};

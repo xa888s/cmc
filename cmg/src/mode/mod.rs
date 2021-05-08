@@ -1,4 +1,4 @@
-use crate::crackme::list::{ListCrackMe, ListItem};
+use crackmes::list::{ListCrackMe, ListItem};
 
 pub mod get;
 pub mod latest;
