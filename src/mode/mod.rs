@@ -1,14 +1,11 @@
-use crate::crackme::{
-    list::{ListCrackMe, ListItem},
-    CrackMe,
-};
+use crate::crackme::list::{ListCrackMe, ListItem};
 
 pub mod get;
 pub mod latest;
 pub mod search;
 
 // TODO: Optimize this
-pub fn get_choice(input: &[CrackMe<'_, ListCrackMe>]) -> Option<String> {
+pub fn get_choice(input: &[ListCrackMe<'_>]) -> Option<String> {
     use skim::prelude::*;
     let options = SkimOptionsBuilder::default()
         .height(Some("50%"))

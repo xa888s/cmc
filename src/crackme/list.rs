@@ -11,13 +11,15 @@ use scraper::{Html, Selector};
 // For the CLI
 use skim::{ItemPreview, PreviewContext, SkimItem};
 
+pub type ListCrackMe<'a> = CrackMe<'a, ListData>;
+
 #[derive(Debug, PartialEq)]
-pub struct ListCrackMe {
+pub struct ListData {
     solutions: u64,
     comments: u64,
 }
 
-impl fmt::Display for ListCrackMe {
+impl fmt::Display for ListData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Solutions: {}", self.solutions)?;
         writeln!(f, "Comments: {}", self.comments)
@@ -32,7 +34,7 @@ pub struct ListItem {
 }
 
 impl ListItem {
-    pub fn with_search(crackme: &CrackMe<'_, ListCrackMe>) -> ListItem {
+    pub fn with_search(crackme: &ListCrackMe<'_>) -> ListItem {
         ListItem {
             text: format!("{} by {}", crackme.name, crackme.author),
             preview: crackme.to_string(),
@@ -41,7 +43,7 @@ impl ListItem {
     }
 }
 
-pub fn parse_list(html: &Html) -> Result<Vec<CrackMe<'_, ListCrackMe>>> {
+pub fn parse_list(html: &Html) -> Result<Vec<ListCrackMe<'_>>> {
     let selector = Selector::parse("#content-list .text-center").unwrap();
 
     let crackmes = html
@@ -69,7 +71,7 @@ pub fn parse_list(html: &Html) -> Result<Vec<CrackMe<'_, ListCrackMe>>> {
 
 pub fn parse_row<'a>(
     (id, mut tr): (&'a str, impl Iterator<Item = &'a str>),
-) -> Result<CrackMe<'a, ListCrackMe>> {
+) -> Result<ListCrackMe<'a>> {
     let (name, author) = (
         tr.next().ok_or_else(|| anyhow!("No name found!"))?,
         tr.next().ok_or_else(|| anyhow!("No author found!"))?,
@@ -103,7 +105,7 @@ pub fn parse_row<'a>(
         date,
         stats,
         id,
-        other: ListCrackMe {
+        other: ListData {
             solutions,
             comments,
         },
@@ -133,7 +135,7 @@ mod test {
     fn parse_latest_text() {
         let html = Html::parse_document(TEST_LATEST_FILE);
         let latest = html;
-        let crackmes: Vec<CrackMe<'_, _>> = parse_list(&latest).unwrap();
+        let crackmes: Vec<ListCrackMe<'_>> = parse_list(&latest).unwrap();
 
         assert_eq!(
             crackmes.first(),
@@ -148,7 +150,7 @@ mod test {
                     difficulty: 4.0
                 },
                 id: "608b747633c5d458ce0ec753",
-                other: ListCrackMe {
+                other: ListData {
                     comments: 1,
                     solutions: 0,
                 }
@@ -160,7 +162,7 @@ mod test {
     fn parse_search_text() {
         let html = Html::parse_document(TEST_SEARCH_FILE);
         let search = html;
-        let crackmes: Vec<CrackMe<'_, _>> = parse_list(&search).unwrap();
+        let crackmes: Vec<ListCrackMe<'_>> = parse_list(&search).unwrap();
 
         assert_eq!(
             crackmes.first(),
@@ -175,7 +177,7 @@ mod test {
                     difficulty: 1.0
                 },
                 id: "60816fca33c5d42f38520831",
-                other: ListCrackMe {
+                other: ListData {
                     solutions: 0,
                     comments: 0,
                 }
