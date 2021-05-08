@@ -1,19 +1,6 @@
-[package]
-name = "cmg"
-version = "0.2.0"
-authors = ["abyss <derribado@tutanota.com>"]
-edition = "2018"
+[workspace]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-anyhow = "1.0.40"
-reqwest = { version = "0.11.3", features = ["cookies"] }
-scraper = "0.12.0"
-skim = "0.9.4"
-structopt = "0.3.21"
-strum = { version = "0.20.0", features = ["derive"] }
-tokio = { version = "1.5.0", features = ["full"] }
-# FIXME once zip-rs allows invalid passwords or if there is a bug in the
-# password verification that is fixed, we can use upstream zip
-zip = { git = "https://github.com/BenjaminRi/zip-rs", branch = "infozip-decrypt" }
+members = [
+	"cmg",
+	"crackmes",
+]

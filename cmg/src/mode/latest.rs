@@ -1,11 +1,11 @@
-use crate::{
-    crackme::list::{self, ListCrackMe},
-    mode::{self, get},
+use crate::mode::{self, get};
+use crackmes::{
+    list::{self, ListCrackMe},
+    Html,
 };
 
 use anyhow::Result;
 use reqwest::Client;
-use scraper::Html;
 
 const LATEST_URL: &str = "https://crackmes.one/lasts/";
 

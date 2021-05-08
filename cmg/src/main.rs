@@ -3,8 +3,6 @@ use reqwest::Client;
 use structopt::StructOpt;
 
 mod cli;
-mod crackme;
-mod macros;
 mod mode;
 
 use cli::*;

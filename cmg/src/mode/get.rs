@@ -1,7 +1,9 @@
-use crate::crackme::overview::{OverviewCrackMe, OverviewData};
 use anyhow::{anyhow, Result};
+use crackmes::{
+    overview::{OverviewCrackMe, OverviewData},
+    Html,
+};
 use reqwest::Client;
-use scraper::Html;
 use std::{fs, io::Cursor, path::Path};
 use zip::read::ZipArchive;
 

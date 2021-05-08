@@ -1,15 +1,10 @@
-use std::{borrow::Cow, fmt};
-
 use super::CrackMe;
 use crate::{
-    crackme::{Language, Platform, Stats},
-    next_parse,
+    error::{CrackMeError, CrackMeResult},
+    next_parse, Language, Platform, Stats,
 };
-use anyhow::{anyhow, Result};
 use scraper::{Html, Selector};
-
-// For the CLI
-use skim::{ItemPreview, PreviewContext, SkimItem};
+use std::fmt;
 
 pub type ListCrackMe<'a> = CrackMe<'a, ListData>;
 
@@ -43,18 +38,7 @@ impl ListItem {
     }
 }
 
-impl SkimItem for ListItem {
-    fn text(&self) -> Cow<str> {
-        Cow::Borrowed(&self.text)
-    }
-
-    // TODO: Find a way to show the description of each search result
-    fn preview(&self, _context: PreviewContext) -> ItemPreview {
-        ItemPreview::Text(self.preview.clone())
-    }
-}
-
-pub fn parse_list(html: &Html) -> Result<Vec<ListCrackMe<'_>>> {
+pub fn parse_list(html: &Html) -> CrackMeResult<Vec<ListCrackMe<'_>>> {
     let selector = Selector::parse("#content-list .text-center").unwrap();
 
     let crackmes = html
@@ -70,7 +54,7 @@ pub fn parse_list(html: &Html) -> Result<Vec<ListCrackMe<'_>>> {
                 .next()
                 .and_then(|a| a.value().attr("href"))
                 .and_then(|link| link.rsplit('/').next())
-                .ok_or_else(|| anyhow!("No ID"))?;
+                .ok_or(CrackMeError::NotFound("ID"))?;
 
             Ok((id, rest))
         })
@@ -82,10 +66,10 @@ pub fn parse_list(html: &Html) -> Result<Vec<ListCrackMe<'_>>> {
 
 pub fn parse_row<'a>(
     (id, mut tr): (&'a str, impl Iterator<Item = &'a str>),
-) -> Result<ListCrackMe<'a>> {
+) -> CrackMeResult<ListCrackMe<'a>> {
     let (name, author) = (
-        tr.next().ok_or_else(|| anyhow!("No name found!"))?,
-        tr.next().ok_or_else(|| anyhow!("No author found!"))?,
+        tr.next().ok_or(CrackMeError::NotFound("name"))?,
+        tr.next().ok_or(CrackMeError::NotFound("author"))?,
     );
 
     next_parse! {
@@ -96,7 +80,7 @@ pub fn parse_row<'a>(
         platform: Platform
     }
 
-    let date: &str = tr.next().ok_or_else(|| anyhow!("No date"))?;
+    let date: &str = tr.next().ok_or(CrackMeError::NotFound("date"))?;
 
     next_parse! {
         tr,
@@ -128,8 +112,8 @@ pub fn parse_row<'a>(
 #[cfg(test)]
 mod test {
     use super::*;
-    const TEST_SEARCH_FILE: &str = include_str!("../../static/search_test.html");
-    const TEST_LATEST_FILE: &str = include_str!("../../static/latest_test.html");
+    const TEST_SEARCH_FILE: &str = include_str!("../static/search_test.html");
+    const TEST_LATEST_FILE: &str = include_str!("../static/latest_test.html");
 
     #[test]
     fn parse_latest_text() {

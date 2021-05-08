@@ -1,12 +1,14 @@
 use crate::{
     cli::SearchArgs,
-    crackme::list::{self, ListCrackMe},
     mode::{self, get},
+};
+use crackmes::{
+    list::{self, ListCrackMe},
+    Html, Selector,
 };
 
 use anyhow::{anyhow, Result};
 use reqwest::Client;
-use scraper::{Html, Selector};
 
 const SEARCH_URL: &str = "https://crackmes.one/search";
 
