@@ -1,17 +1,17 @@
 use crate::{
     cli::SearchArgs,
     crackme::{
-        list::ListCrackMe,
-        search::{SearchPage, SEARCH_URL},
+        list::{self, ListCrackMe},
         CrackMe,
     },
-    mode::{get, self},
+    mode::{self, get},
 };
 
 use anyhow::{anyhow, Result};
 use reqwest::Client;
 use scraper::{Html, Selector};
-use std::convert::TryInto;
+
+const SEARCH_URL: &str = "https://crackmes.one/search";
 
 // returns all the search results
 pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) -> Result<()> {
@@ -48,9 +48,9 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
         .text()
         .await?;
 
-    let search = SearchPage(Html::parse_document(&search));
+    let search = Html::parse_document(&search);
 
-    let crackmes: Vec<CrackMe<'_, ListCrackMe>> = (&search).try_into()?;
+    let crackmes: Vec<CrackMe<'_, ListCrackMe>> = list::parse_list(&search)?;
 
     if let Some(id) = mode::get_choice(&crackmes) {
         get::handle_crackme(client, &id).await?;

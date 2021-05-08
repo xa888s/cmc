@@ -126,16 +126,14 @@ impl SkimItem for ListItem {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::crackme::{latest::LatestPage, search::SearchPage};
-    use std::convert::TryInto;
     const TEST_SEARCH_FILE: &str = include_str!("../../static/search_test.html");
     const TEST_LATEST_FILE: &str = include_str!("../../static/latest_test.html");
 
     #[test]
     fn parse_latest_text() {
         let html = Html::parse_document(TEST_LATEST_FILE);
-        let search = LatestPage(html);
-        let crackmes: Vec<CrackMe<'_, _>> = (&search).try_into().unwrap();
+        let latest = html;
+        let crackmes: Vec<CrackMe<'_, _>> = parse_list(&latest).unwrap();
 
         assert_eq!(
             crackmes.first(),
@@ -161,8 +159,8 @@ mod test {
     #[test]
     fn parse_search_text() {
         let html = Html::parse_document(TEST_SEARCH_FILE);
-        let search = SearchPage(html);
-        let crackmes: Vec<CrackMe<'_, _>> = (&search).try_into().unwrap();
+        let search = html;
+        let crackmes: Vec<CrackMe<'_, _>> = parse_list(&search).unwrap();
 
         assert_eq!(
             crackmes.first(),

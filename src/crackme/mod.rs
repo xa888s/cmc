@@ -1,7 +1,5 @@
-pub mod latest;
 pub mod list;
 pub mod overview;
-pub mod search;
 
 use std::fmt;
 use strum::{Display, EnumString};
@@ -33,9 +31,6 @@ where
         &self.id
     }
 
-    pub fn extra(&self) -> &T {
-        &self.other
-    }
 }
 
 impl<'a, T> fmt::Display for CrackMe<'a, T>
