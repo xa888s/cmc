@@ -75,8 +75,9 @@ impl<'a> OverviewData<'a> {
         // get rid of known download flags
         info.nth(1);
 
+        // TODO: add this back when we know for sure that it doesn't fail on valid pages
         // make sure there (probably) hasn't been a change in the format
-        assert!(info.next().is_none());
+        // assert!(info.next().is_none());
 
         let name = OverviewData::parse_name(&html)?;
 
