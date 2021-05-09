@@ -8,7 +8,24 @@ use std::fmt;
 
 pub type ListCrackMe<'a> = CrackMe<'a, ListData>;
 
-#[derive(Debug, PartialEq)]
+impl<'a> ListCrackMe<'a> {
+    pub fn to_search_string(&self) -> String {
+        format!(
+            "{}{}{}{}{}{:.1}{:.1}{}{}",
+            self.name,
+            self.author,
+            self.language,
+            self.date,
+            self.platform,
+            self.stats.quality,
+            self.stats.difficulty,
+            self.id,
+            self.other
+        )
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct ListData {
     solutions: u64,
     comments: u64,
@@ -18,23 +35,6 @@ impl fmt::Display for ListData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Solutions: {}", self.solutions)?;
         writeln!(f, "Comments: {}", self.comments)
-    }
-}
-
-#[derive(Debug)]
-pub struct ListItem {
-    text: String,
-    preview: String,
-    pub id: String,
-}
-
-impl ListItem {
-    pub fn with_search(crackme: &ListCrackMe<'_>) -> ListItem {
-        ListItem {
-            text: format!("{} by {}", crackme.name, crackme.author),
-            preview: crackme.to_string(),
-            id: crackme.id().to_string(),
-        }
     }
 }
 
@@ -124,19 +124,19 @@ mod test {
         assert_eq!(
             crackmes.first(),
             Some(&CrackMe {
-                name: "Crack Me",
-                author: "Segfault21",
-                language: Language::DotNet,
-                platform: Platform::Windows,
-                date: "3:07 AM 04/30/2021",
+                name: "EZwan",
+                author: "DirkD",
+                language: Language::COrCPlusPlus,
+                platform: Platform::UnixLinux,
+                date: "5:40 PM 05/07/2021",
                 stats: Stats {
                     quality: 4.0,
-                    difficulty: 4.0
+                    difficulty: 1.0
                 },
-                id: "608b747633c5d458ce0ec753",
+                id: "60957b9a33c5d458ce0ec88e",
                 other: ListData {
-                    comments: 1,
                     solutions: 0,
+                    comments: 1,
                 }
             })
         );
@@ -151,16 +151,16 @@ mod test {
         assert_eq!(
             crackmes.first(),
             Some(&CrackMe {
-                name: "SAFE_01",
-                author: "oles",
-                language: Language::VisualBasic,
-                platform: Platform::Windows,
-                date: "12:44 PM 04/22/2021",
+                name: "EZwan",
+                author: "DirkD",
+                language: Language::COrCPlusPlus,
+                platform: Platform::UnixLinux,
+                date: "5:40 PM 05/07/2021",
                 stats: Stats {
-                    quality: 4.5,
+                    quality: 4.0,
                     difficulty: 1.0
                 },
-                id: "60816fca33c5d42f38520831",
+                id: "60957b9a33c5d458ce0ec88e",
                 other: ListData {
                     solutions: 0,
                     comments: 0,

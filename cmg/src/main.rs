@@ -4,6 +4,7 @@ use structopt::StructOpt;
 
 mod cli;
 mod mode;
+mod tui;
 
 use cli::*;
 use mode::*;

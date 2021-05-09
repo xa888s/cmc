@@ -51,6 +51,25 @@ fn write_zip_to_disk(bytes: Vec<u8>, crackme: &OverviewCrackMe<'_>) -> Result<()
     Ok(())
 }
 
+pub async fn get_description(client: &mut Client, id: &str) -> Result<String> {
+    // downloads crackme page
+    let html = {
+        let body = client
+            .get(GET_URL.to_string() + id)
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        Html::parse_document(&body)
+    };
+
+    Ok(OverviewData::with_full_html(&html, id)?
+        .extra()
+        .description()
+        .to_string())
+}
+
 pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
     // downloads crackme page
     let html = {
