@@ -10,7 +10,7 @@ pub use scraper::{Html, Selector};
 use std::fmt;
 use strum::{Display, EnumString};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct CrackMe<'a, T>
 where
     T: fmt::Display + fmt::Debug,
@@ -33,8 +33,16 @@ where
         &self.name
     }
 
+    pub fn author(&self) -> &str {
+        &self.author
+    }
+
     pub fn id(&self) -> &str {
         &self.id
+    }
+
+    pub fn extra(&self) -> &T {
+        &self.other
     }
 }
 
@@ -56,7 +64,7 @@ where
 
 // we allow this so the mapping is more one to one
 #[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, PartialEq, EnumString, Display)]
+#[derive(Debug, PartialEq, EnumString, Display, Clone)]
 pub enum Platform {
     DOS,
     #[strum(serialize = "macos", serialize = "Mac OS X")]
@@ -82,7 +90,7 @@ pub enum Platform {
     Other,
 }
 
-#[derive(Debug, PartialEq, EnumString, Display)]
+#[derive(Debug, PartialEq, EnumString, Display, Clone)]
 pub enum Language {
     #[strum(serialize = "cpp", serialize = "C/C++")]
     COrCPlusPlus,
@@ -100,7 +108,7 @@ pub enum Language {
     Other,
 }
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default, Clone)]
 pub struct Stats {
     pub quality: f32,
     pub difficulty: f32,

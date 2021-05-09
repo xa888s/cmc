@@ -17,6 +17,10 @@ impl<'a> OverviewData<'a> {
     pub fn new(description: &'a str) -> OverviewData<'a> {
         OverviewData { description }
     }
+
+    pub fn description(&self) -> &'a str {
+        &self.description
+    }
 }
 
 impl Display for OverviewData<'_> {
@@ -154,7 +158,7 @@ mod tests {
                 platform: Platform::Windows,
                 language: Language::VisualBasic,
                 stats: Stats {
-                    quality: 4.5,
+                    quality: 3.7,
                     difficulty: 1.0,
                 },
                 id,
