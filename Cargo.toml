@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-	"cmg",
+	"cm-client",
 	"crackmes",
 ]

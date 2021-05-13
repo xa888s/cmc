@@ -1,10 +1,8 @@
 [package]
-name = "cmg"
+name = "cm-client"
 version = "0.2.0"
 authors = ["abyss <derribado@tutanota.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.40"
@@ -20,3 +18,8 @@ crossterm = { version = "0.19.0", features = ["event-stream"] }
 tui = { version = "0.15.0", default-features = false, features = ["crossterm"] }
 futures-util = "0.3.14"
 fuzzy-matcher = "0.3.7"
+
+[[bin]]
+path = "src/main.rs"
+name = "cmc"
+

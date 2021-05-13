@@ -2,7 +2,7 @@ use crackmes::{Language, Platform};
 use structopt::StructOpt;
 
 #[derive(StructOpt, PartialEq, Debug)]
-#[structopt(name = "cmg", about = "Simple crackmes.one client")]
+#[structopt(name = "cmc", about = "Simple crackmes.one client")]
 pub struct App {
     #[structopt(subcommand)]
     pub nested: Command,
