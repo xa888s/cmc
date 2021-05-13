@@ -1,4 +1,4 @@
-# cmg
+# cmc
 A collection of crates for interacting with
 [crackmes.one](https://crackmes.one). 
 
