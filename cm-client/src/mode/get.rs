@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
-use crackmes::{
-    overview::{OverviewCrackMe, OverviewData},
-    Html,
-};
+use crackmes::{overview::OverviewCrackMe, Html};
 use reqwest::Client;
 use std::{fs, io::Cursor, path::Path};
 use zip::read::ZipArchive;
@@ -64,9 +61,10 @@ pub async fn get_description(client: &mut Client, id: &str) -> Result<String> {
         Html::parse_document(&body)
     };
 
-    Ok(OverviewData::with_full_html(&html, id)?
-        .extra()
+    // this unwrap is safe because OverviewCrackMe is guaranteed to have a description
+    Ok(OverviewCrackMe::with_full_html(&html, id)?
         .description()
+        .unwrap()
         .to_string())
 }
 
@@ -83,7 +81,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = OverviewData::with_full_html(&html, id)?;
+    let crackme = OverviewCrackMe::with_full_html(&html, id)?;
 
     // getting the zip file
     let bytes = client

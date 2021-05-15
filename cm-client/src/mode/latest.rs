@@ -22,9 +22,9 @@ pub async fn handle_latest_results<'a>(client: &mut Client, number: u64) -> Resu
 
     let latest = html;
 
-    let crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&latest)?;
+    let mut crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&latest)?;
 
-    if let Some(crackme) = mode::get_choice(client, &crackmes).await? {
+    if let Some(crackme) = mode::get_choice(client, &mut crackmes).await? {
         get::handle_crackme(client, crackme.id()).await?;
     }
 

@@ -1,5 +1,4 @@
-use crate::tui::state::StatefulList;
-use crate::tui::term::{self, Search};
+use crate::tui::term::{self, SearchText, Searcher};
 use anyhow::Result;
 use crackmes::list::ListCrackMe;
 use crossterm::event::{Event, EventStream, KeyModifiers};
@@ -13,77 +12,48 @@ pub mod search;
 // TODO: Optimize this
 pub async fn get_choice<'a>(
     client: &mut Client,
-    input: &'a [ListCrackMe<'a>],
-) -> Result<Option<ListCrackMe<'a>>> {
+    input: &'a mut [ListCrackMe<'a>],
+) -> Result<Option<&'a ListCrackMe<'a>>> {
     let mut term = term::get_term()?;
 
     let mut events = EventStream::new();
 
-    let mut search = Search::new(input);
-    let mut list = StatefulList::with_items(search.search());
+    let mut searcher = Searcher::new(input);
+    let mut search_text = SearchText::default();
 
-    list.last();
+    searcher.fetch_descriptions(client).await?;
 
-    let mut description = get_description(client, &list).await?;
-
-    term::draw(&mut term, &search, &mut list, &description)?;
-
-    let mut selected = false;
+    term::draw(&mut term, &search_text, &mut searcher)?;
 
     while let Some(e) = events.next().await.transpose()? {
         if let Event::Key(k) = e {
             use crossterm::event::KeyCode::*;
             match k.code {
                 Enter => {
-                    selected = true;
                     break;
                 }
-                Esc => break,
-                Up => list.previous(),
-                Char('k') if k.modifiers == KeyModifiers::CONTROL => list.previous(),
-                Down => list.next(),
-                Char('j') if k.modifiers == KeyModifiers::CONTROL => list.next(),
+                Esc => return Ok(None),
+                Up => searcher.previous(),
+                Char('k') if k.modifiers == KeyModifiers::CONTROL => searcher.previous(),
+                Down => searcher.next(),
+                Char('j') if k.modifiers == KeyModifiers::CONTROL => searcher.next(),
                 Char(c) => {
-                    search.push(c);
-                    list.unselect();
-                    list.items = search.search();
-                    list.last();
+                    search_text.push(c);
+                    searcher.search(search_text.as_str());
                 }
                 Backspace => {
-                    search.pop();
-                    list.unselect();
-                    list.items = search.search();
-                    list.last();
+                    search_text.pop();
+                    searcher.search(search_text.as_str())
                 }
                 _ => break,
             }
-            description = get_description(client, &list).await?;
+            searcher.fetch_descriptions(client).await?;
         }
 
-        term::draw(&mut term, &search, &mut list, &description)?;
+        term::draw(&mut term, &search_text, &mut searcher)?;
     }
 
     term::close_term(term)?;
 
-    // TODO: fix the return type to not have double indirection
-    Ok(if selected {
-        list.selected().map(|c| (**c).clone())
-    } else {
-        None
-    })
-}
-
-async fn get_description(
-    client: &mut Client,
-    list: &StatefulList<&'_ ListCrackMe<'_>>,
-) -> Result<String> {
-    Ok(if let Some(l) = list.selected() {
-        format!(
-            "{}\nDescription:\n{}",
-            l,
-            crate::get::get_description(client, l.id()).await?
-        )
-    } else {
-        String::new()
-    })
+    Ok(searcher.into_selected())
 }

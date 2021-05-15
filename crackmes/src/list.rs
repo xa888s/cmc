@@ -4,14 +4,13 @@ use crate::{
     next_parse, Language, Platform, Stats,
 };
 use scraper::{Html, Selector};
-use std::fmt;
 
-pub type ListCrackMe<'a> = CrackMe<'a, ListData>;
+pub type ListCrackMe<'a> = CrackMe<'a>;
 
 impl<'a> ListCrackMe<'a> {
     pub fn to_search_string(&self) -> String {
         format!(
-            "{}{}{}{}{}{:.1}{:.1}{}{}",
+            "{}{}{}{}{}{:.1}{:.1}{}{}{}{}",
             self.name,
             self.author,
             self.language,
@@ -20,21 +19,10 @@ impl<'a> ListCrackMe<'a> {
             self.stats.quality,
             self.stats.difficulty,
             self.id,
-            self.other
+            self.solutions,
+            self.comments,
+            self.description.as_deref().unwrap_or("")
         )
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct ListData {
-    solutions: u64,
-    comments: u64,
-}
-
-impl fmt::Display for ListData {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Solutions: {}", self.solutions)?;
-        writeln!(f, "Comments: {}", self.comments)
     }
 }
 
@@ -100,10 +88,9 @@ pub fn parse_row<'a>(
         date,
         stats,
         id,
-        other: ListData {
-            solutions,
-            comments,
-        },
+        solutions,
+        comments,
+        description: None,
     };
 
     Ok(crackme)
@@ -134,10 +121,9 @@ mod test {
                     difficulty: 1.0
                 },
                 id: "60957b9a33c5d458ce0ec88e",
-                other: ListData {
-                    solutions: 0,
-                    comments: 1,
-                }
+                solutions: 0,
+                comments: 1,
+                description: None,
             })
         );
     }
@@ -161,10 +147,9 @@ mod test {
                     difficulty: 1.0
                 },
                 id: "60957b9a33c5d458ce0ec88e",
-                other: ListData {
-                    solutions: 0,
-                    comments: 0,
-                }
+                solutions: 0,
+                comments: 0,
+                description: None,
             })
         );
     }

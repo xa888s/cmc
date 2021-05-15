@@ -7,14 +7,12 @@ pub mod overview;
 
 pub use scraper::{Html, Selector};
 
+use std::borrow::Cow;
 use std::fmt;
 use strum::{Display, EnumString};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct CrackMe<'a, T>
-where
-    T: fmt::Display + fmt::Debug,
-{
+pub struct CrackMe<'a> {
     name: &'a str,
     author: &'a str,
     language: Language,
@@ -22,13 +20,12 @@ where
     platform: Platform,
     stats: Stats,
     id: &'a str,
-    other: T,
+    solutions: u64,
+    comments: u64,
+    description: Option<Cow<'a, str>>,
 }
 
-impl<'a, T> CrackMe<'a, T>
-where
-    T: fmt::Display + fmt::Debug,
-{
+impl<'a> CrackMe<'a> {
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -41,15 +38,24 @@ where
         &self.id
     }
 
-    pub fn extra(&self) -> &T {
-        &self.other
+    pub fn try_set_description<T>(&mut self, description: T) -> Result<(), T>
+    where
+        T: Into<Cow<'a, str>>,
+    {
+        if self.description.is_none() {
+            self.description = Some(description.into());
+            Ok(())
+        } else {
+            Err(description)
+        }
+    }
+
+    pub fn description(&self) -> Option<&str> {
+        self.description.as_deref()
     }
 }
 
-impl<'a, T> fmt::Display for CrackMe<'a, T>
-where
-    T: fmt::Display + fmt::Debug,
-{
+impl<'a> fmt::Display for CrackMe<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Name: {}", self.name)?;
         writeln!(f, "Author: {}", self.author)?;
@@ -58,7 +64,25 @@ where
         writeln!(f, "Platform: {}", self.platform)?;
         writeln!(f, "Quality: {:.1}", self.stats.quality)?;
         writeln!(f, "Difficulty: {:.1}", self.stats.difficulty)?;
-        <T as fmt::Display>::fmt(&self.other, f)
+        writeln!(f, "Solutions: {}", self.solutions)?;
+        writeln!(f, "Comments: {}", self.comments)?;
+
+        if let Some(description) = self.description.as_deref() {
+            writeln!(
+                f,
+                "Description:{}{}",
+                // If it is a long description (with new lines) then print it on a seperate line, else
+                // print it on the same line
+                if description.contains('\n') {
+                    '\n'
+                } else {
+                    ' '
+                },
+                description
+            )?;
+        }
+
+        Ok(())
     }
 }
 

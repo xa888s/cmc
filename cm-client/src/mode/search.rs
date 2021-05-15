@@ -49,9 +49,9 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
 
     let search = Html::parse_document(&search);
 
-    let crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&search)?;
+    let mut crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&search)?;
 
-    if let Some(crackme) = mode::get_choice(client, &crackmes).await? {
+    if let Some(crackme) = mode::get_choice(client, &mut crackmes).await? {
         get::handle_crackme(client, crackme.id()).await?;
     }
 
