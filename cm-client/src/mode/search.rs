@@ -3,7 +3,7 @@ use crate::{
     mode::{self, get},
 };
 use crackmes::{
-    list::{self, ListCrackMe},
+    list::{self, ListCrackme},
     Html, Selector,
 };
 
@@ -49,7 +49,7 @@ pub async fn handle_search_results<'a>(client: &mut Client, args: SearchArgs) ->
 
     let search = Html::parse_document(&search);
 
-    let mut crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&search)?;
+    let mut crackmes: Vec<ListCrackme<'_>> = list::parse_list(&search)?;
 
     if let Some(crackme) = mode::get_choice(client, &mut crackmes).await? {
         get::handle_crackme(client, crackme.id()).await?;

@@ -3,9 +3,9 @@ macro_rules! next_parse {
     ($i:ident, $s:ident: $t:ty) => {
         let $s: $t = $i
             .next()
-            .ok_or(crate::error::CrackMeError::NotFound(stringify!($s)))?
+            .ok_or(crate::error::CrackmeError::NotFound(stringify!($s)))?
             .parse()
-            .map_err(|_| crate::error::CrackMeError::DetailParse(stringify!($s)))?;
+            .map_err(|_| crate::error::CrackmeError::DetailParse(stringify!($s)))?;
     };
 
     ($i:ident, $s:ident: $t:ty $(, $ss:ident: $ts:ty)+) => {

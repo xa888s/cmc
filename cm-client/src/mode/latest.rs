@@ -1,6 +1,6 @@
 use crate::mode::{self, get};
 use crackmes::{
-    list::{self, ListCrackMe},
+    list::{self, ListCrackme},
     Html,
 };
 
@@ -22,7 +22,7 @@ pub async fn handle_latest_results<'a>(client: &mut Client, number: u64) -> Resu
 
     let latest = html;
 
-    let mut crackmes: Vec<ListCrackMe<'_>> = list::parse_list(&latest)?;
+    let mut crackmes: Vec<ListCrackme<'_>> = list::parse_list(&latest)?;
 
     if let Some(crackme) = mode::get_choice(client, &mut crackmes).await? {
         get::handle_crackme(client, crackme.id()).await?;

@@ -1,14 +1,26 @@
 use crate::{
-    error::{CrackMeError, CrackMeResult},
-    next_parse, CrackMe, Language, Platform, Stats,
+    error::{CrackmeError, CrackmeResult},
+    next_parse, BaseCrackme, Language, Platform, Stats,
 };
 use scraper::{Html, Selector};
+use std::fmt;
 
-pub type OverviewCrackMe<'a> = CrackMe<'a>;
+#[derive(Debug, PartialEq, Clone)]
+pub struct OverviewCrackme<'html> {
+    base: BaseCrackme<'html>,
+    description: &'html str,
+}
 
-impl<'a> OverviewCrackMe<'a> {
+impl<'html> fmt::Display for OverviewCrackme<'html> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "{}", self.base)?;
+        writeln!(f, "Description: {}", self.description)
+    }
+}
+
+impl<'a> OverviewCrackme<'a> {
     // TODO: Clean up this whole function
-    pub fn with_full_html(html: &'a Html, id: &'a str) -> CrackMeResult<OverviewCrackMe<'a>> {
+    pub fn with_full_html(html: &'a Html, id: &'a str) -> CrackmeResult<OverviewCrackme<'a>> {
         let selector = Selector::parse("div.columns.panel-background div.column.col-3").unwrap();
 
         // doing all our passes
@@ -28,14 +40,14 @@ impl<'a> OverviewCrackMe<'a> {
         // difficulty
         // quality
 
-        let author = info.next().ok_or(CrackMeError::NotFound("author"))?;
+        let author = info.next().ok_or(CrackmeError::NotFound("author"))?;
 
         next_parse! {
             info,
             language: Language
         }
 
-        let date = info.next().ok_or(CrackMeError::NotFound("upload"))?;
+        let date = info.next().ok_or(CrackmeError::NotFound("upload"))?;
 
         next_parse! {
             info,
@@ -51,48 +63,64 @@ impl<'a> OverviewCrackMe<'a> {
         // make sure there (probably) hasn't been a change in the format
         // assert!(info.next().is_none());
 
-        let name = OverviewCrackMe::parse_name(&html)?;
+        let name = OverviewCrackme::parse_name(&html)?;
 
-        let description = OverviewCrackMe::get_description(&html)?;
+        let description = OverviewCrackme::fetch_description(&html)?;
 
         let stats = Stats {
             quality,
             difficulty,
         };
 
-        let solutions = OverviewCrackMe::get_solutions(&html);
-        let comments = OverviewCrackMe::get_comments(&html);
+        let solutions = OverviewCrackme::fetch_solutions(&html);
+        let comments = OverviewCrackme::fetch_comments(&html);
 
         // put together our crackme and return it
-        let crackme = CrackMe {
+        let crackme = BaseCrackme {
             name,
-            date,
             author,
             language,
+            date,
             platform,
             stats,
             id,
-            description: Some(description.into()),
             solutions,
             comments,
         };
 
-        Ok(crackme)
+        let overview = OverviewCrackme {
+            base: crackme,
+            description,
+        };
+
+        Ok(overview)
     }
 
-    fn get_comments(html: &Html) -> u64 {
+    pub fn description(&self) -> &str {
+        self.description
+    }
+
+    pub fn id(&self) -> &str {
+        self.base.id
+    }
+
+    pub fn name(&self) -> &str {
+        self.base.name
+    }
+
+    fn fetch_comments(html: &Html) -> u64 {
         let selector = Selector::parse("div#comments p").unwrap();
 
         html.select(&selector).count() as u64
     }
 
-    fn get_solutions(html: &Html) -> u64 {
+    fn fetch_solutions(html: &Html) -> u64 {
         let selector = Selector::parse("div#solutions div.col-9").unwrap();
 
         html.select(&selector).count() as u64
     }
 
-    fn parse_name(html: &Html) -> CrackMeResult<&str> {
+    fn parse_name(html: &Html) -> CrackmeResult<&str> {
         // the name is the only h3 element
         let selector = Selector::parse("h3").unwrap();
 
@@ -105,7 +133,7 @@ impl<'a> OverviewCrackMe<'a> {
                 .next()
                 .and_then(|t| t.text().nth(1))
                 .and_then(|t| t.split("'s ").nth(1))
-                .ok_or(CrackMeError::NotFound("h3"))?;
+                .ok_or(CrackmeError::NotFound("h3"))?;
 
             // FIXME: use actual parsing
             text
@@ -114,7 +142,7 @@ impl<'a> OverviewCrackMe<'a> {
         Ok(name)
     }
 
-    fn get_description(html: &Html) -> CrackMeResult<&str> {
+    fn fetch_description(html: &Html) -> CrackmeResult<&str> {
         let selector = Selector::parse("div.columns div.col-12 span").unwrap();
 
         let description = html
@@ -122,7 +150,7 @@ impl<'a> OverviewCrackMe<'a> {
             .next()
             .and_then(|span| span.text().next());
 
-        description.ok_or(CrackMeError::NotFound("description"))
+        description.ok_or(CrackmeError::NotFound("description"))
     }
 }
 
@@ -135,24 +163,26 @@ mod tests {
     fn parse_full_crackme() {
         let html = Html::parse_document(TEST_FILE);
         let id = "60816fca33c5d42f38520831";
-        let crackme = OverviewCrackMe::with_full_html(&html, id).unwrap();
+        let crackme = OverviewCrackme::with_full_html(&html, id).unwrap();
 
         assert_eq!(
             crackme,
-            CrackMe {
-                name: "SAFE_01",
-                author: "oles",
-                date: "12:44 PM 04/22/2021",
-                platform: Platform::Windows,
-                language: Language::VisualBasic,
-                stats: Stats {
-                    quality: 3.7,
-                    difficulty: 1.0,
+            OverviewCrackme {
+                base: BaseCrackme {
+                    name: "SAFE_01",
+                    author: "oles",
+                    date: "12:44 PM 04/22/2021",
+                    platform: Platform::Windows,
+                    language: Language::VisualBasic,
+                    stats: Stats {
+                        quality: 3.7,
+                        difficulty: 1.0,
+                    },
+                    id,
+                    solutions: 0,
+                    comments: 0,
                 },
-                id,
-                solutions: 0,
-                comments: 0,
-                description: Some("easy crackme ..enjoy )"),
+                description: "easy crackme ..enjoy )",
             }
         );
     }

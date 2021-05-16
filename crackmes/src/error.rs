@@ -1,11 +1,11 @@
 use thiserror::Error;
 
-pub type CrackMeResult<T> = Result<T, CrackMeError>;
+pub type CrackmeResult<T> = Result<T, CrackmeError>;
 
 /// The primary error type for crackme related errors
 // TODO: use an enum instead of just strings
 #[derive(Error, Debug)]
-pub enum CrackMeError {
+pub enum CrackmeError {
     #[error("No value found for {0}!")]
     NotFound(&'static str),
 
