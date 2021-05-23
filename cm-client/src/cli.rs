@@ -79,10 +79,9 @@ fn range_parser(v: &str) -> Result<(u8, u8), &'static str> {
 }
 
 fn id_parser(v: &str) -> Result<String, &'static str> {
-    let v = v.to_string();
     if v.len() != 24 {
         Err("Invalid ID length")
     } else {
-        Ok(v)
+        Ok(v.into())
     }
 }
