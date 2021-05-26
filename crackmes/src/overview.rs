@@ -180,7 +180,7 @@ mod tests {
                     },
                     id,
                     solutions: 0,
-                    comments: 0,
+                    comments: 2,
                 },
                 description: "easy crackme ..enjoy )",
             }
