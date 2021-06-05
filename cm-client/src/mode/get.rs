@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use crackmes::{overview::OverviewCrackMe, Html};
+use crackmes::{overview::OverviewCrackme, Html};
 use reqwest::Client;
 use std::{fs, io::Cursor, path::Path};
 use zip::read::ZipArchive;
@@ -7,7 +7,7 @@ use zip::read::ZipArchive;
 const MAIN_URL: &str = "https://crackmes.one";
 const GET_URL: &str = "https://crackmes.one/crackme/";
 
-fn write_zip_to_disk(bytes: Vec<u8>, crackme: &OverviewCrackMe<'_>) -> Result<()> {
+fn write_zip_to_disk(bytes: Vec<u8>, crackme: &OverviewCrackme<'_>) -> Result<()> {
     // wrap our bytes with a cursor for the seek implementation
     let mut zip = ZipArchive::new(Cursor::new(bytes))?;
 
@@ -62,9 +62,8 @@ pub async fn get_description(client: &mut Client, id: &str) -> Result<String> {
     };
 
     // this unwrap is safe because OverviewCrackMe is guaranteed to have a description
-    Ok(OverviewCrackMe::with_full_html(&html, id)?
+    Ok(OverviewCrackme::with_full_html(&html, id)?
         .description()
-        .unwrap()
         .to_string())
 }
 
@@ -81,7 +80,7 @@ pub async fn handle_crackme(client: &mut Client, id: &str) -> Result<()> {
         Html::parse_document(&body)
     };
 
-    let crackme = OverviewCrackMe::with_full_html(&html, id)?;
+    let crackme = OverviewCrackme::with_full_html(&html, id)?;
 
     // getting the zip file
     let bytes = client

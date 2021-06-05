@@ -1,6 +1,10 @@
-use crate::tui::term::{self, SearchText, Searcher};
+use crate::tui::{
+    search::{SearchText, Searcher},
+    term,
+};
+
 use anyhow::Result;
-use crackmes::list::ListCrackMe;
+use crackmes::list::ListCrackme;
 use crossterm::event::{Event, EventStream, KeyModifiers};
 use futures_util::stream::StreamExt;
 use reqwest::Client;
@@ -12,8 +16,8 @@ pub mod search;
 // TODO: Optimize this
 pub async fn get_choice<'a>(
     client: &mut Client,
-    input: &'a mut [ListCrackMe<'a>],
-) -> Result<Option<&'a ListCrackMe<'a>>> {
+    input: &'a mut [ListCrackme<'a>],
+) -> Result<Option<&'a ListCrackme<'a>>> {
     let mut term = term::get_term()?;
 
     let mut events = EventStream::new();
